@@ -1,0 +1,96 @@
+import type {
+  AttachmentSlot,
+  MockProduct,
+  Preset,
+  Project,
+  StudioMode,
+  ToolItem,
+} from "./types";
+
+/** Monthly usage quota (the 25% wheel in the sidebar). */
+export const MONTHLY_USAGE_PERCENT = 25;
+
+/** Preset gallery cards — the primary "start here" entry points. */
+export const PRESETS: Preset[] = [
+  {
+    id: "tv-ad",
+    label: "إعلان تلفزيوني",
+    mode: "video",
+    promptScaffold: "إعلان تلفزيوني سينمائي يبرز المنتج بإضاءة احترافية ولقطات واسعة.",
+    gradient: "from-amber-900 via-stone-800 to-neutral-900",
+  },
+  {
+    id: "fast-motion",
+    label: "حركة سريعة",
+    mode: "video",
+    promptScaffold: "لقطة بحركة كاميرا سريعة (crash zoom) حول المنتج بخلفية حيوية.",
+    gradient: "from-lime-400 via-green-500 to-emerald-700",
+  },
+  {
+    id: "unboxing",
+    label: "فتح العلبة",
+    mode: "video",
+    promptScaffold: "مشهد فتح علبة المنتج بأيدٍ أنيقة وإضاءة ناعمة وتركيز على التفاصيل.",
+    gradient: "from-rose-500 via-red-500 to-rose-700",
+  },
+  {
+    id: "influencers",
+    label: "مؤثرين",
+    mode: "video",
+    promptScaffold: "مؤثر يستعرض المنتج بأسلوب UGC طبيعي أمام الكاميرا مع تعليق صوتي.",
+    gradient: "from-slate-300 via-slate-400 to-slate-600",
+  },
+  {
+    id: "explainer",
+    label: "شرح",
+    mode: "video",
+    promptScaffold: "فيديو توضيحي يشرح مميزات المنتج خطوة بخطوة بأسلوب بسيط وجذاب.",
+    gradient: "from-teal-300 via-cyan-400 to-sky-500",
+  },
+];
+
+/** Saved projects shown in the sidebar (المشاريع). */
+export const PROJECTS: Project[] = [
+  { id: "shower-gel", name: "شاور جل" },
+  { id: "shampoo", name: "شامبو" },
+  { id: "travel-bag", name: "شنطة سفر" },
+];
+
+/** Tools shown in the sidebar (أدوات). */
+export const TOOLS: ToolItem[] = [
+  { id: "url-to-ad", label: "من رابط إلى إعلان", icon: "link" },
+  { id: "mcp", label: "إتصال MCP", icon: "plug" },
+  { id: "reference-ad", label: "إعلان مرجعي", icon: "sparkles", isNew: true },
+];
+
+/** Sample store products for the (mocked) product picker. */
+export const MOCK_PRODUCTS: MockProduct[] = [
+  { id: "p1", name: "شاور جل بالألوفيرا", price: "٣٥ ر.س", gradient: "from-emerald-200 to-teal-300" },
+  { id: "p2", name: "شامبو طبيعي", price: "٤٢ ر.س", gradient: "from-amber-200 to-orange-300" },
+  { id: "p3", name: "شنطة سفر مقاومة للماء", price: "١٩٩ ر.س", gradient: "from-slate-200 to-slate-400" },
+  { id: "p4", name: "عطر فاخر", price: "٢٨٠ ر.س", gradient: "from-rose-200 to-pink-300" },
+];
+
+/** Attachment slots differ by mode (matches the two Figma frames). */
+export function attachmentsForMode(mode: StudioMode): AttachmentSlot[] {
+  if (mode === "video") {
+    return [
+      { id: "character", kind: "character", label: "الشخصية" },
+      { id: "product", kind: "product", label: "المنتج", required: true },
+    ];
+  }
+  // Image mode: required product + a few image slots.
+  return [
+    { id: "product", kind: "product", label: "المنتج", required: true },
+    { id: "img-1", kind: "image", label: "صورة" },
+    { id: "img-2", kind: "image", label: "صورة" },
+  ];
+}
+
+/** Toolbar option chips differ by mode (matches the two Figma frames). */
+export function toolbarOptionsForMode(mode: StudioMode): string[] {
+  if (mode === "video") {
+    return ["12s", "720p", "9:16", "مراجعة منتج"];
+  }
+  return ["منصة إجتماعية", "صورة انستجرام", "نص عربي"];
+}
