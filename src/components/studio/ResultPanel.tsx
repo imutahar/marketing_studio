@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2, Download, RotateCcw, Play, ImageIcon } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import type { GenerationStatus, StudioMode } from "@/lib/types";
 
 interface ResultPanelProps {
@@ -48,21 +49,14 @@ export function ResultPanel({ status, mode, prompt, onReset }: ResultPanelProps)
       )}
 
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-card transition-opacity hover:opacity-90"
-        >
+        <Button variant="primary">
           <Download className="size-4" strokeWidth={2} />
           تنزيل
-        </button>
-        <button
-          type="button"
-          onClick={onReset}
-          className="flex items-center gap-2 rounded-xl border border-line px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-neutrals"
-        >
+        </Button>
+        <Button variant="outline" onClick={onReset}>
           <RotateCcw className="size-4" strokeWidth={2} />
           إعلان جديد
-        </button>
+        </Button>
       </div>
     </div>
   );

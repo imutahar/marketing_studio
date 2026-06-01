@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { GenerationStatus, Preset, StudioMode } from "@/lib/types";
+import { useComposer } from "@/hooks/useComposer";
+import { useGeneration } from "@/hooks/useGeneration";
+import type { Preset } from "@/lib/types";
 import { Sidebar } from "./Sidebar";
 import { Hero } from "./Hero";
 import { Composer } from "./Composer";
@@ -9,31 +10,22 @@ import { PresetGallery } from "./PresetGallery";
 import { ResultPanel } from "./ResultPanel";
 
 export function StudioScreen() {
-  const [mode, setMode] = useState<StudioMode>("video");
-  const [prompt, setPrompt] = useState("");
-  const [status, setStatus] = useState<GenerationStatus>("idle");
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current);
-  }, []);
+  const composer = useComposer("video");
+  const { status, result, start, reset: resetGeneration } = useGeneration();
 
   function handleSubmit() {
-    if (!prompt.trim() || status === "generating") return;
-    setStatus("generating");
-    // Mock generation latency — no backend yet.
-    timer.current = setTimeout(() => setStatus("result"), 2500);
+    if (!composer.canSubmit || status === "generating") return;
+    start(composer.buildRequest());
   }
 
   function handlePickPreset(preset: Preset) {
-    setMode(preset.mode);
-    setPrompt(preset.promptScaffold);
-    setStatus("idle");
+    resetGeneration();
+    composer.applyPreset(preset);
   }
 
   function handleReset() {
-    setStatus("idle");
-    setPrompt("");
+    resetGeneration();
+    composer.reset();
   }
 
   return (
@@ -47,10 +39,7 @@ export function StudioScreen() {
           <Hero />
 
           <Composer
-            mode={mode}
-            onModeChange={setMode}
-            prompt={prompt}
-            onPromptChange={setPrompt}
+            composer={composer}
             onSubmit={handleSubmit}
             isGenerating={status === "generating"}
           />
@@ -59,7 +48,12 @@ export function StudioScreen() {
             {status === "idle" ? (
               <PresetGallery onPick={handlePickPreset} />
             ) : (
-              <ResultPanel status={status} mode={mode} prompt={prompt} onReset={handleReset} />
+              <ResultPanel
+                status={status}
+                mode={result?.output.type ?? composer.mode}
+                prompt={result?.request.prompt ?? composer.prompt}
+                onReset={handleReset}
+              />
             )}
           </div>
         </div>

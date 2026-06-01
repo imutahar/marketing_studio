@@ -48,3 +48,31 @@ export interface AttachmentSlot {
 
 /** Generation lifecycle for the in-place result experience. */
 export type GenerationStatus = "idle" | "generating" | "result";
+
+/** A value attached to a composer slot (MVP: a locally-uploaded image). */
+export interface AttachmentValue {
+  slotId: string;
+  kind: AttachmentSlot["kind"];
+  fileName: string;
+  previewUrl: string;
+}
+
+/**
+ * Everything the composer collects, ready to hand to a generation backend.
+ * This is the single source of truth for "what the user wants generated".
+ */
+export interface GenerationRequest {
+  mode: StudioMode;
+  prompt: string;
+  /** Selected toolbar option labels (duration, ratio, platform, …). */
+  options: string[];
+  attachments: AttachmentValue[];
+}
+
+/** Result of a generation job (mocked for now). */
+export interface Generation {
+  id: string;
+  request: GenerationRequest;
+  output: { type: StudioMode };
+  createdAt: number;
+}

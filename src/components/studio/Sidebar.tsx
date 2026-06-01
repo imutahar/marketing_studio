@@ -1,6 +1,7 @@
 import { Link2, Plug, Sparkles, Plus, Folder } from "lucide-react";
 import { MONTHLY_USAGE_PERCENT, PROJECTS, TOOLS } from "@/lib/mock";
 import type { ToolItem } from "@/lib/types";
+import { Button } from "@/components/ui/Button";
 import { UsageWheel } from "./UsageWheel";
 
 const TOOL_ICONS = {
@@ -45,13 +46,10 @@ export function Sidebar() {
       </div>
 
       {/* New project */}
-      <button
-        type="button"
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-line py-2 text-sm font-medium text-ink transition-colors hover:border-line-hover hover:bg-neutrals"
-      >
+      <Button variant="outline" className="w-full">
         <Plus className="size-4" strokeWidth={2} />
         مشروع جديد
-      </button>
+      </Button>
 
       {/* Tools */}
       <Section title="أدوات">

@@ -1,43 +1,32 @@
 "use client";
 
-import { useState } from "react";
 import { ArrowUp, Settings2, Plus } from "lucide-react";
-import type { StudioMode } from "@/lib/types";
-import { attachmentsForMode, toolbarOptionsForMode } from "@/lib/mock";
+import type { ComposerController } from "@/hooks/useComposer";
+import { Button } from "@/components/ui/Button";
+import { Chip } from "@/components/ui/Chip";
 import { AttachmentSlot } from "./AttachmentSlot";
 import { ModeToggle } from "./ModeToggle";
 
 interface ComposerProps {
-  mode: StudioMode;
-  onModeChange: (mode: StudioMode) => void;
-  prompt: string;
-  onPromptChange: (value: string) => void;
+  composer: ComposerController;
   onSubmit: () => void;
   isGenerating: boolean;
 }
 
-function ToolbarChip({ children }: { children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      className="flex h-8 items-center gap-1 rounded-xl border border-line px-2 text-xs font-medium text-ink transition-colors hover:border-line-hover"
-    >
-      {children}
-    </button>
-  );
-}
-
-export function Composer({
-  mode,
-  onModeChange,
-  prompt,
-  onPromptChange,
-  onSubmit,
-  isGenerating,
-}: ComposerProps) {
-  const [iconOnly] = useState(true); // settings/add chips render icon-only, per design
-  const attachments = attachmentsForMode(mode);
-  const options = toolbarOptionsForMode(mode);
+export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
+  const {
+    mode,
+    prompt,
+    slots,
+    options,
+    selectedOptions,
+    attachments,
+    canSubmit,
+    setPrompt,
+    changeMode,
+    toggleOption,
+    setAttachment,
+  } = composer;
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -57,15 +46,21 @@ export function Composer({
         <div className="flex items-start justify-between gap-4">
           <textarea
             value={prompt}
-            onChange={(e) => onPromptChange(e.target.value)}
+            onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={2}
+            aria-label="وصف الإعلان"
             placeholder="اوصف ما يحدث في إعلانك..."
             className="min-h-[56px] flex-1 resize-none bg-transparent text-md leading-6 text-ink outline-none placeholder:text-ink-muted"
           />
           <div className="flex shrink-0 gap-2">
-            {attachments.map((slot) => (
-              <AttachmentSlot key={slot.id} slot={slot} />
+            {slots.map((slot) => (
+              <AttachmentSlot
+                key={slot.id}
+                slot={slot}
+                value={attachments[slot.id]}
+                onChange={setAttachment}
+              />
             ))}
           </div>
         </div>
@@ -73,33 +68,37 @@ export function Composer({
         {/* Bottom: toolbar (start/right) + send (end/left) */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
-            <ToolbarChip>
+            <Button variant="outline" size="sm" aria-label="إعدادات">
               <Settings2 className="size-4 text-ink-faint" strokeWidth={1.75} />
-            </ToolbarChip>
+            </Button>
             {options.map((opt) => (
-              <ToolbarChip key={opt}>{opt}</ToolbarChip>
+              <Chip
+                key={opt}
+                active={selectedOptions.includes(opt)}
+                onClick={() => toggleOption(opt)}
+              >
+                {opt}
+              </Chip>
             ))}
-            {iconOnly && (
-              <ToolbarChip>
-                <Plus className="size-4 text-ink-faint" strokeWidth={1.75} />
-              </ToolbarChip>
-            )}
+            <Button variant="outline" size="sm" aria-label="إضافة خيار">
+              <Plus className="size-4 text-ink-faint" strokeWidth={1.75} />
+            </Button>
           </div>
 
-          <button
-            type="button"
+          <Button
+            variant="mint"
+            size="icon"
             onClick={onSubmit}
-            disabled={isGenerating}
-            className="grid size-8 shrink-0 place-items-center rounded-xl border-2 border-secondary bg-secondary text-primary transition-opacity hover:opacity-90 disabled:opacity-50"
+            disabled={isGenerating || !canSubmit}
             aria-label="إنشاء الإعلان"
           >
             <ArrowUp className="size-4" strokeWidth={2.5} />
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Mode toggle on the outer (end/left) edge */}
-      <ModeToggle mode={mode} onChange={onModeChange} />
+      <ModeToggle mode={mode} onChange={changeMode} />
     </div>
   );
 }
