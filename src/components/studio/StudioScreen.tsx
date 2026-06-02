@@ -11,7 +11,7 @@ import { ResultPanel } from "./ResultPanel";
 
 export function StudioScreen() {
   const composer = useComposer("video");
-  const { status, result, start, reset: resetGeneration } = useGeneration();
+  const { status, result, error, start, reset: resetGeneration } = useGeneration();
 
   function handleSubmit() {
     if (!composer.canSubmit || status === "generating") return;
@@ -44,14 +44,24 @@ export function StudioScreen() {
             isGenerating={status === "generating"}
           />
 
+          {error && (
+            <p
+              role="alert"
+              className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-2 text-sm text-danger"
+            >
+              {error}
+            </p>
+          )}
+
           <div className="w-full pt-2">
             {status === "idle" ? (
               <PresetGallery onPick={handlePickPreset} />
             ) : (
               <ResultPanel
                 status={status}
-                mode={result?.output.type ?? composer.mode}
+                mode={result?.request.mode ?? composer.mode}
                 prompt={result?.request.prompt ?? composer.prompt}
+                result={result}
                 onReset={handleReset}
               />
             )}

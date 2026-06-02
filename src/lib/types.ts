@@ -69,10 +69,21 @@ export interface GenerationRequest {
   attachments: AttachmentValue[];
 }
 
-/** Result of a generation job (mocked for now). */
+/** A single generated asset returned by the backend. */
+export interface GenerationOutput {
+  type: StudioMode;
+  url: string;
+}
+
+/** A generation job as returned by the backend. */
 export interface Generation {
   id: string;
+  status: "queued" | "processing" | "succeeded" | "failed";
   request: GenerationRequest;
-  output: { type: StudioMode };
-  createdAt: number;
+  outputs: GenerationOutput[];
+  capability?: string;
+  provider?: string;
+  error?: string;
+  createdAt: string;
+  updatedAt?: string;
 }
