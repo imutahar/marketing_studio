@@ -49,11 +49,12 @@ export interface AttachmentSlot {
 /** Generation lifecycle for the in-place result experience. */
 export type GenerationStatus = "idle" | "generating" | "result";
 
-/** A value attached to a composer slot (MVP: a locally-uploaded image). */
+/** A value attached to a composer slot (a locally-uploaded image). */
 export interface AttachmentValue {
   slotId: string;
   kind: AttachmentSlot["kind"];
   fileName: string;
+  /** Base64 data URI of the downscaled image — used for preview and as input. */
   previewUrl: string;
 }
 

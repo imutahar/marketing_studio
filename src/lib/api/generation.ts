@@ -24,19 +24,19 @@ export async function generateAd(
   return pollUntilDone(created.id, signal);
 }
 
-/** Map the composer request to the backend DTO (drops client-only fields). */
+/** Map the composer request to the backend DTO. */
 function toPayload(request: GenerationRequest) {
   return {
     mode: request.mode,
     prompt: request.prompt,
     options: request.options,
-    // NOTE: previewUrl is a local blob URL the backend can't read. We send
-    // metadata only for now; a real upload pipeline (file → public URL) is the
-    // next step for image-to-image / image-to-video with live providers.
+    // previewUrl is a base64 data URI of the (downscaled) uploaded image, which
+    // the provider can consume directly as the image-to-image/video reference.
     attachments: request.attachments.map((a) => ({
       slotId: a.slotId,
       kind: a.kind,
       fileName: a.fileName,
+      url: a.previewUrl,
     })),
   };
 }
