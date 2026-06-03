@@ -5,7 +5,7 @@ import { useComposer } from "@/hooks/useComposer";
 import { useGeneration } from "@/hooks/useGeneration";
 import { useUsage } from "@/hooks/useUsage";
 import type { Preset } from "@/lib/types";
-import type { ProductInfo } from "@/lib/api/extract";
+import type { UrlToAdResult } from "./UrlToAdModal";
 import { Sidebar } from "./Sidebar";
 import { Hero } from "./Hero";
 import { Composer } from "./Composer";
@@ -28,12 +28,26 @@ export function StudioScreen() {
     if (id === "url-to-ad") setUrlModalOpen(true);
   }
 
-  function handleApplyProduct(product: ProductInfo) {
+  function handleGenerateFromUrl({ product, style, duration, resolution }: UrlToAdResult) {
+    const prompt = `إعلان فيديو بأسلوب ${style.label} يبرز ${product.title}.`;
+    const selections = { videoType: style.label, duration, resolution };
+    // Reflect the choice in the composer UI...
+    composer.applyProduct({ prompt, imageUrl: product.image, fileName: product.title, selections });
+    setUrlModalOpen(false);
+    // ...and kick off generation immediately (one-click).
     resetGeneration();
-    composer.applyProduct({
-      prompt: `إعلان فيديو احترافي يبرز ${product.title} بأسلوب جذاب.`,
-      imageUrl: product.image,
-      fileName: product.title,
+    start({
+      mode: "video",
+      prompt,
+      options: Object.values(selections),
+      attachments: [
+        {
+          slotId: "product",
+          kind: "product",
+          fileName: product.title,
+          previewUrl: product.image,
+        },
+      ],
     });
   }
 
@@ -96,7 +110,7 @@ export function StudioScreen() {
       <UrlToAdModal
         open={urlModalOpen}
         onClose={() => setUrlModalOpen(false)}
-        onApply={handleApplyProduct}
+        onGenerate={handleGenerateFromUrl}
       />
     </div>
   );

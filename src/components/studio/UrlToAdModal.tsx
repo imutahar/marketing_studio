@@ -1,31 +1,104 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import Image from "next/image";
-import { X, Link2, MousePointerClick, Loader2, ArrowLeft } from "lucide-react";
+import {
+  X,
+  Link2,
+  MousePointerClick,
+  Loader2,
+  Sparkles,
+  Clock,
+  Monitor,
+} from "lucide-react";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useHoverVideo } from "@/hooks/useHoverVideo";
 import { extractProduct, type ProductInfo } from "@/lib/api/extract";
+import { AD_STYLES, type AdStyle } from "@/lib/styles";
 import { PREVIEW_VIDEOS } from "@/lib/media";
+import type { DropdownSelect } from "@/lib/toolbar";
 import { Button } from "@/components/ui/Button";
+import { ToolbarSelect } from "./ToolbarSelect";
+
+export interface UrlToAdResult {
+  product: ProductInfo;
+  style: AdStyle;
+  duration: string;
+  resolution: string;
+}
 
 interface UrlToAdModalProps {
   open: boolean;
   onClose: () => void;
-  onApply: (product: ProductInfo) => void;
+  onGenerate: (result: UrlToAdResult) => void;
 }
 
-export function UrlToAdModal({ open, onClose, onApply }: UrlToAdModalProps) {
+const DURATION_SELECT: DropdownSelect = {
+  id: "duration",
+  control: "dropdown",
+  icon: Clock,
+  placeholder: "المدة",
+  options: ["6 ث", "8 ث", "10 ث", "12 ث"],
+};
+const RESOLUTION_SELECT: DropdownSelect = {
+  id: "resolution",
+  control: "dropdown",
+  icon: Monitor,
+  placeholder: "الدقة",
+  options: ["480p", "720p", "1080p"],
+};
+
+function StyleCard({
+  style,
+  selected,
+  onSelect,
+}: {
+  style: AdStyle;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const { videoRef, hoverHandlers } = useHoverVideo();
+  return (
+    <button type="button" onClick={onSelect} {...hoverHandlers} className="text-start">
+      <div
+        className={`relative aspect-[3/4] overflow-hidden rounded-2xl bg-gradient-to-br ${style.gradient} transition ${
+          selected ? "ring-2 ring-primary ring-offset-2" : "hover:-translate-y-1"
+        }`}
+      >
+        {style.video && (
+          <video
+            ref={videoRef}
+            src={style.video}
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            className="pointer-events-none absolute inset-0 size-full object-cover"
+          />
+        )}
+      </div>
+      <p className="mt-2 text-sm font-medium text-ink">{style.label}</p>
+      <p className="truncate text-xs text-ink-muted">{style.description}</p>
+    </button>
+  );
+}
+
+export function UrlToAdModal({ open, onClose, onGenerate }: UrlToAdModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const [step, setStep] = useState<"url" | "style">("url");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [product, setProduct] = useState<ProductInfo | null>(null);
+  const [styleId, setStyleId] = useState<string | null>(null);
+  const [duration, setDuration] = useState("8 ث");
+  const [resolution, setResolution] = useState("720p");
 
   const close = useCallback(() => {
     onClose();
-    // reset for next open
+    setStep("url");
     setUrl("");
     setProduct(null);
+    setStyleId(null);
     setError(null);
     setLoading(false);
   }, [onClose]);
@@ -34,12 +107,13 @@ export function UrlToAdModal({ open, onClose, onApply }: UrlToAdModalProps) {
 
   if (!open) return null;
 
-  async function handleExtract() {
+  async function handleContinue() {
     if (!url.trim() || loading) return;
     setLoading(true);
     setError(null);
     try {
       setProduct(await extractProduct(url.trim()));
+      setStep("style");
     } catch {
       setError("تعذّر قراءة الرابط. تأكد من رابط صفحة المنتج وحاول مرة أخرى.");
     } finally {
@@ -47,9 +121,10 @@ export function UrlToAdModal({ open, onClose, onApply }: UrlToAdModalProps) {
     }
   }
 
-  function handleUse() {
-    if (!product) return;
-    onApply(product);
+  function handleGenerate() {
+    const style = AD_STYLES.find((s) => s.id === styleId);
+    if (!product || !style) return;
+    onGenerate({ product, style, duration, resolution });
     close();
   }
 
@@ -65,10 +140,10 @@ export function UrlToAdModal({ open, onClose, onApply }: UrlToAdModalProps) {
         aria-modal="true"
         aria-label="من رابط إلى إعلان"
         onClick={(e) => e.stopPropagation()}
-        className="flex w-full max-w-[880px] flex-col overflow-hidden rounded-2xl bg-card shadow-[0px_1px_4px_0px_rgba(0,0,0,0.2)]"
+        className="flex max-h-[88vh] w-full max-w-[980px] flex-col overflow-hidden rounded-2xl bg-card shadow-[0px_1px_4px_0px_rgba(0,0,0,0.2)]"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex shrink-0 items-center justify-between px-6 py-4">
           <h3 className="text-md font-bold text-ink">من رابط إلى إعلان</h3>
           <button
             type="button"
@@ -80,84 +155,106 @@ export function UrlToAdModal({ open, onClose, onApply }: UrlToAdModalProps) {
           </button>
         </div>
 
-        <div className="grid gap-6 px-6 pb-6 md:grid-cols-2">
-          {/* Form / preview */}
-          <div className="flex flex-col">
-            <span className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-rose-400 to-fuchsia-500 text-card">
-              <MousePointerClick className="size-6" strokeWidth={2} />
-            </span>
-            <h2 className="mt-4 text-2xl font-bold leading-snug text-ink-strong">
-              حوّل رابط منتجك إلى إعلان فيديو
-            </h2>
-            <p className="mt-2 text-sm text-ink-muted">
-              الصق رابط صفحة المنتج لإنشاء إعلان جاهز لتيك توك وريلز وشورتس — بدون
-              تصوير ولا مونتاج.
-            </p>
+        {step === "url" ? (
+          <div className="grid gap-6 px-6 pb-6 md:grid-cols-2">
+            <div className="flex flex-col">
+              <span className="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-rose-400 to-fuchsia-500 text-card">
+                <MousePointerClick className="size-6" strokeWidth={2} />
+              </span>
+              <h2 className="mt-4 text-2xl font-bold leading-snug text-ink-strong">
+                حوّل رابط منتجك إلى إعلان فيديو
+              </h2>
+              <p className="mt-2 text-sm text-ink-muted">
+                الصق رابط صفحة المنتج لإنشاء إعلان جاهز لتيك توك وريلز وشورتس —
+                بدون تصوير ولا مونتاج.
+              </p>
 
-            <div className="mt-auto pt-6">
-              {product ? (
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-3 rounded-2xl border border-line p-3">
-                    <span className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-neutrals">
-                      <Image src={product.image} alt={product.title} fill className="object-cover" unoptimized />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-ink">{product.title}</p>
-                      {product.price && (
-                        <p className="mt-0.5 text-xs text-ink-muted">{product.price}</p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="primary" className="flex-1 bg-gradient-to-br from-rose-400 to-fuchsia-500" onClick={handleUse}>
-                      إنشاء الإعلان
-                    </Button>
-                    <Button variant="outline" onClick={() => setProduct(null)} aria-label="رجوع">
-                      <ArrowLeft className="size-4" strokeWidth={2} />
-                    </Button>
-                  </div>
+              <div className="mt-auto flex flex-col gap-3 pt-6">
+                <div className="flex items-center gap-2 rounded-xl border border-line px-3 focus-within:border-line-hover">
+                  <Link2 className="size-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
+                  <input
+                    type="url"
+                    dir="ltr"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleContinue()}
+                    placeholder="www.yourproduct.com"
+                    className="h-11 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
+                    aria-label="رابط صفحة المنتج"
+                  />
                 </div>
-              ) : (
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2 rounded-xl border border-line px-3 focus-within:border-line-hover">
-                    <Link2 className="size-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
-                    <input
-                      type="url"
-                      dir="ltr"
-                      value={url}
-                      onChange={(e) => setUrl(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleExtract()}
-                      placeholder="www.yourproduct.com"
-                      className="h-11 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-ink-muted"
-                      aria-label="رابط صفحة المنتج"
-                    />
-                  </div>
-                  {error && <p className="text-xs text-danger">{error}</p>}
-                  <Button
-                    variant="primary"
-                    className="w-full bg-gradient-to-br from-rose-400 to-fuchsia-500"
-                    onClick={handleExtract}
-                    disabled={!url.trim() || loading}
-                  >
-                    {loading ? <Loader2 className="size-4 animate-spin" /> : "متابعة"}
-                  </Button>
-                </div>
-              )}
+                {error && <p className="text-xs text-danger">{error}</p>}
+                <Button
+                  variant="primary"
+                  className="w-full bg-gradient-to-br from-rose-400 to-fuchsia-500"
+                  onClick={handleContinue}
+                  disabled={!url.trim() || loading}
+                >
+                  {loading ? <Loader2 className="size-4 animate-spin" /> : "متابعة"}
+                </Button>
+              </div>
+            </div>
+
+            <div className="relative hidden aspect-[3/4] overflow-hidden rounded-2xl bg-neutrals md:block">
+              <video
+                src={PREVIEW_VIDEOS.influencer}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="size-full object-cover"
+              />
             </div>
           </div>
+        ) : (
+          <>
+            <div className="shrink-0 px-6">
+              <h2 className="text-2xl font-bold text-ink-strong">اختر أسلوبًا وابدأ</h2>
+              <p className="mt-1 text-sm text-ink-muted">اختر ما يناسب منتجك.</p>
+            </div>
 
-          {/* Sample preview */}
-          <div className="relative hidden aspect-[3/4] overflow-hidden rounded-2xl bg-neutrals md:block">
-            <video
-              src={PREVIEW_VIDEOS.influencer}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="size-full object-cover"
-            />
-          </div>
-        </div>
+            {/* Style grid (scrollable) */}
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4 scroll-thin">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {AD_STYLES.map((style) => (
+                  <StyleCard
+                    key={style.id}
+                    style={style}
+                    selected={style.id === styleId}
+                    onSelect={() => setStyleId(style.id)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Bottom bar */}
+            <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-line px-6 py-4">
+              <ToolbarSelect
+                config={RESOLUTION_SELECT}
+                value={resolution}
+                onSelect={setResolution}
+              />
+              <ToolbarSelect
+                config={DURATION_SELECT}
+                value={duration}
+                onSelect={setDuration}
+              />
+              <span className="flex h-8 items-center gap-1 rounded-xl border border-line px-2 text-xs font-medium text-ink-muted">
+                <Link2 className="size-4 text-ink-faint" strokeWidth={1.75} />
+                رابط المنتج
+              </span>
+              <Button
+                variant="primary"
+                className="ms-auto bg-gradient-to-br from-rose-400 to-fuchsia-500"
+                onClick={handleGenerate}
+                disabled={!styleId}
+              >
+                <Sparkles className="size-4" strokeWidth={2} />
+                إنشاء الفيديو
+              </Button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -61,9 +61,14 @@ export function useComposer(initialMode: StudioMode = "video") {
 
   /** Seed the composer from an extracted product (Url-to-Ad flow). */
   const applyProduct = useCallback(
-    (product: { prompt: string; imageUrl: string; fileName?: string }) => {
+    (product: {
+      prompt: string;
+      imageUrl: string;
+      fileName?: string;
+      selections?: Record<string, string>;
+    }) => {
       setMode("video");
-      setSelections(defaultSelections("video"));
+      setSelections({ ...defaultSelections("video"), ...(product.selections ?? {}) });
       setPrompt(product.prompt);
       setAttachments({
         product: {
