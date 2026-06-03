@@ -1,25 +1,41 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useComposer } from "@/hooks/useComposer";
 import { useGeneration } from "@/hooks/useGeneration";
 import { useUsage } from "@/hooks/useUsage";
 import type { Preset } from "@/lib/types";
+import type { ProductInfo } from "@/lib/api/extract";
 import { Sidebar } from "./Sidebar";
 import { Hero } from "./Hero";
 import { Composer } from "./Composer";
 import { PresetGallery } from "./PresetGallery";
 import { ResultPanel } from "./ResultPanel";
+import { UrlToAdModal } from "./UrlToAdModal";
 
 export function StudioScreen() {
   const composer = useComposer("video");
   const { status, result, error, start, reset: resetGeneration } = useGeneration();
   const { usage, refresh: refreshUsage } = useUsage();
+  const [urlModalOpen, setUrlModalOpen] = useState(false);
 
   // A finished job consumes tokens — refresh the monthly usage.
   useEffect(() => {
     if (status === "result") void refreshUsage();
   }, [status, refreshUsage]);
+
+  function handleToolSelect(id: string) {
+    if (id === "url-to-ad") setUrlModalOpen(true);
+  }
+
+  function handleApplyProduct(product: ProductInfo) {
+    resetGeneration();
+    composer.applyProduct({
+      prompt: `إعلان فيديو احترافي يبرز ${product.title} بأسلوب جذاب.`,
+      imageUrl: product.image,
+      fileName: product.title,
+    });
+  }
 
   function handleSubmit() {
     if (!composer.canSubmit || status === "generating") return;
@@ -39,7 +55,7 @@ export function StudioScreen() {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-card">
       {/* Sidebar first in DOM → pinned to the right in RTL */}
-      <Sidebar usage={usage} />
+      <Sidebar usage={usage} onToolSelect={handleToolSelect} />
 
       {/* Main canvas */}
       <main className="studio-backdrop relative flex-1 overflow-y-auto scroll-thin">
@@ -76,6 +92,12 @@ export function StudioScreen() {
           </div>
         </div>
       </main>
+
+      <UrlToAdModal
+        open={urlModalOpen}
+        onClose={() => setUrlModalOpen(false)}
+        onApply={handleApplyProduct}
+      />
     </div>
   );
 }

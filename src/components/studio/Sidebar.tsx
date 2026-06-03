@@ -23,12 +23,19 @@ function Badge({ kind }: { kind: "new" | "soon" }) {
   );
 }
 
-function ToolNavItem({ tool }: { tool: ToolItem }) {
+function ToolNavItem({
+  tool,
+  onSelect,
+}: {
+  tool: ToolItem;
+  onSelect?: (id: string) => void;
+}) {
   const Icon = TOOL_ICONS[tool.icon];
   return (
     <button
       type="button"
       disabled={tool.disabled}
+      onClick={() => onSelect?.(tool.id)}
       className={`flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-sm transition-colors ${
         tool.disabled
           ? "cursor-default text-ink-faint"
@@ -76,7 +83,13 @@ function Section({
   );
 }
 
-export function Sidebar({ usage }: { usage?: UsageSummary | null }) {
+export function Sidebar({
+  usage,
+  onToolSelect,
+}: {
+  usage?: UsageSummary | null;
+  onToolSelect?: (id: string) => void;
+}) {
   const percent = usage?.percentUsed ?? MONTHLY_USAGE_PERCENT;
   return (
     <aside className="flex h-full w-[230px] shrink-0 flex-col border-s border-line bg-card px-4 py-4 scroll-thin">
@@ -107,7 +120,7 @@ export function Sidebar({ usage }: { usage?: UsageSummary | null }) {
       <div className="mt-6">
         <Section title="أدوات">
           {TOOLS.map((tool) => (
-            <ToolNavItem key={tool.id} tool={tool} />
+            <ToolNavItem key={tool.id} tool={tool} onSelect={onToolSelect} />
           ))}
         </Section>
       </div>

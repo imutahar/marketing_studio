@@ -59,6 +59,24 @@ export function useComposer(initialMode: StudioMode = "video") {
     setSelections(defaultSelections(preset.mode));
   }, []);
 
+  /** Seed the composer from an extracted product (Url-to-Ad flow). */
+  const applyProduct = useCallback(
+    (product: { prompt: string; imageUrl: string; fileName?: string }) => {
+      setMode("video");
+      setSelections(defaultSelections("video"));
+      setPrompt(product.prompt);
+      setAttachments({
+        product: {
+          slotId: "product",
+          kind: "product",
+          fileName: product.fileName ?? "product",
+          previewUrl: product.imageUrl,
+        },
+      });
+    },
+    [],
+  );
+
   const reset = useCallback(() => {
     setPrompt("");
     setSelections(defaultSelections(mode));
@@ -92,6 +110,7 @@ export function useComposer(initialMode: StudioMode = "video") {
     setSelection,
     setAttachment,
     applyPreset,
+    applyProduct,
     reset,
     buildRequest,
   };
