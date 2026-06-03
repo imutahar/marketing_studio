@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
+import { useHoverVideo } from "@/hooks/useHoverVideo";
 import type { SheetCard, SheetSelect } from "@/lib/toolbar";
 
 interface ToolbarSheetProps {
@@ -10,7 +12,7 @@ interface ToolbarSheetProps {
   onSelect: (value: string) => void;
 }
 
-/** A single card: shows the video first frame, plays it on hover. */
+/** A single card: shows the clip's first frame and plays it on hover. */
 function SheetCardButton({
   card,
   selected,
@@ -20,25 +22,13 @@ function SheetCardButton({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  function handleEnter() {
-    videoRef.current?.play().catch(() => {});
-  }
-  function handleLeave() {
-    const v = videoRef.current;
-    if (v) {
-      v.pause();
-      v.currentTime = 0;
-    }
-  }
+  const { videoRef, hoverHandlers } = useHoverVideo();
 
   return (
     <button
       type="button"
       onClick={onSelect}
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
+      {...hoverHandlers}
       className={`relative aspect-[3/4] overflow-hidden rounded-3xl bg-gradient-to-br ${card.gradient} text-start transition ${
         selected ? "ring-2 ring-primary ring-offset-2" : "hover:-translate-y-1"
       }`}
@@ -65,20 +55,11 @@ function SheetCardButton({
 /** نوع الفيديو chip → modal popup sheet with a grid of style cards. */
 export function ToolbarSheet({ config, value, onSelect }: ToolbarSheetProps) {
   const [open, setOpen] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const Icon = config.icon;
 
-  useEffect(() => {
-    if (!open) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [open]);
+  const close = useCallback(() => setOpen(false), []);
+  useFocusTrap(dialogRef, open, close);
 
   return (
     <>
@@ -99,11 +80,13 @@ export function ToolbarSheet({ config, value, onSelect }: ToolbarSheetProps) {
       {open && (
         <div
           className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
-          onClick={() => setOpen(false)}
+          onClick={close}
         >
           <div
+            ref={dialogRef}
             dir="rtl"
             role="dialog"
+            aria-modal="true"
             aria-label={config.title}
             onClick={(e) => e.stopPropagation()}
             className="flex max-h-[85vh] w-full max-w-[800px] flex-col overflow-hidden rounded-2xl bg-card shadow-[0px_1px_4px_0px_rgba(0,0,0,0.2)]"
@@ -117,7 +100,7 @@ export function ToolbarSheet({ config, value, onSelect }: ToolbarSheetProps) {
               <button
                 type="button"
                 aria-label="إغلاق"
-                onClick={() => setOpen(false)}
+                onClick={close}
                 className="grid size-8 shrink-0 place-items-center rounded-xl border border-line text-ink transition-colors hover:bg-neutrals"
               >
                 <X className="size-4" strokeWidth={1.75} />

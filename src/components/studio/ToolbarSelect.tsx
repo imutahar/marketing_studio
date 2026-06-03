@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { usePopover } from "@/hooks/usePopover";
 import type { DropdownSelect } from "@/lib/toolbar";
 
 interface ToolbarSelectProps {
@@ -12,28 +12,11 @@ interface ToolbarSelectProps {
 
 /**
  * Composer toolbar dropdown: [leading icon] [value/placeholder] [chevron].
- * Matches the Figma chips (e.g. 12 ث / 720p / 9:16 / نوع الفيديو).
+ * Matches the Figma chips (e.g. 720p / 9:16 / نوع الصورة).
  */
 export function ToolbarSelect({ config, value, onSelect }: ToolbarSelectProps) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const { open, setOpen, ref } = usePopover();
   const Icon = config.icon;
-
-  useEffect(() => {
-    if (!open) return;
-    function onDocClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
 
   return (
     <div className="relative" dir="rtl" ref={ref}>

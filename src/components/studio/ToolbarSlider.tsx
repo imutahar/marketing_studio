@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { usePopover } from "@/hooks/usePopover";
 import type { SliderSelect } from "@/lib/toolbar";
 
 interface ToolbarSliderProps {
@@ -12,26 +12,9 @@ interface ToolbarSliderProps {
 
 /** Duration chip → popover with a range slider (e.g. 6–12 ث). */
 export function ToolbarSlider({ config, value, onChange }: ToolbarSliderProps) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const { open, setOpen, ref } = usePopover();
   const Icon = config.icon;
   const current = Number.parseInt(value ?? "", 10) || config.max;
-
-  useEffect(() => {
-    if (!open) return;
-    function onDocClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
 
   return (
     <div className="relative" dir="rtl" ref={ref}>
