@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { AttachmentSlot } from "./AttachmentSlot";
 import { ModeToggle } from "./ModeToggle";
 import { ToolbarSelect } from "./ToolbarSelect";
+import { ToolbarSlider } from "./ToolbarSlider";
+import { ToolbarSheet } from "./ToolbarSheet";
 
 interface ComposerProps {
   composer: ComposerController;
@@ -89,14 +91,36 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
           {/* dir=ltr pins the visual order to the design: settings (left) … + (right) */}
           <div dir="ltr" className="flex flex-wrap items-center gap-2">
             <IconChip icon={SlidersHorizontal} label="إعدادات" />
-            {selects.map((select) => (
-              <ToolbarSelect
-                key={select.id}
-                config={select}
-                value={selections[select.id]}
-                onSelect={(value) => setSelection(select.id, value)}
-              />
-            ))}
+            {selects.map((select) => {
+              if (select.control === "slider") {
+                return (
+                  <ToolbarSlider
+                    key={select.id}
+                    config={select}
+                    value={selections[select.id]}
+                    onChange={(value) => setSelection(select.id, value)}
+                  />
+                );
+              }
+              if (select.control === "sheet") {
+                return (
+                  <ToolbarSheet
+                    key={select.id}
+                    config={select}
+                    value={selections[select.id]}
+                    onSelect={(value) => setSelection(select.id, value)}
+                  />
+                );
+              }
+              return (
+                <ToolbarSelect
+                  key={select.id}
+                  config={select}
+                  value={selections[select.id]}
+                  onSelect={(value) => setSelection(select.id, value)}
+                />
+              );
+            })}
             <IconChip icon={Plus} label="إضافة" />
           </div>
 

@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
-import type { ToolbarSelectConfig } from "@/lib/toolbar";
+import type { DropdownSelect } from "@/lib/toolbar";
 
 interface ToolbarSelectProps {
-  config: ToolbarSelectConfig;
+  config: DropdownSelect;
   value?: string;
   onSelect: (value: string) => void;
 }
