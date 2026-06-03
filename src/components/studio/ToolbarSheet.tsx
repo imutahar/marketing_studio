@@ -1,13 +1,65 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
-import type { SheetSelect } from "@/lib/toolbar";
+import type { SheetCard, SheetSelect } from "@/lib/toolbar";
 
 interface ToolbarSheetProps {
   config: SheetSelect;
   value?: string;
   onSelect: (value: string) => void;
+}
+
+/** A single card: shows the video first frame, plays it on hover. */
+function SheetCardButton({
+  card,
+  selected,
+  onSelect,
+}: {
+  card: SheetCard;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  function handleEnter() {
+    videoRef.current?.play().catch(() => {});
+  }
+  function handleLeave() {
+    const v = videoRef.current;
+    if (v) {
+      v.pause();
+      v.currentTime = 0;
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+      className={`relative aspect-[3/4] overflow-hidden rounded-3xl bg-gradient-to-br ${card.gradient} text-start transition ${
+        selected ? "ring-2 ring-primary ring-offset-2" : "hover:-translate-y-1"
+      }`}
+    >
+      {card.video && (
+        <video
+          ref={videoRef}
+          src={card.video}
+          muted
+          loop
+          playsInline
+          preload="metadata"
+          className="pointer-events-none absolute inset-0 size-full object-cover"
+        />
+      )}
+      <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
+      <span className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-card/95 px-3 py-1 text-[10px] font-bold text-ink shadow-sm">
+        {card.label}
+      </span>
+    </button>
+  );
 }
 
 /** نوع الفيديو chip → modal popup sheet with a grid of style cards. */
@@ -54,10 +106,10 @@ export function ToolbarSheet({ config, value, onSelect }: ToolbarSheetProps) {
             role="dialog"
             aria-label={config.title}
             onClick={(e) => e.stopPropagation()}
-            className="flex max-h-[82vh] w-full max-w-[860px] flex-col overflow-hidden rounded-xl bg-card shadow-[0px_1px_4px_0px_rgba(0,0,0,0.2)]"
+            className="flex max-h-[85vh] w-full max-w-[800px] flex-col overflow-hidden rounded-2xl bg-card shadow-[0px_1px_4px_0px_rgba(0,0,0,0.2)]"
           >
-            {/* Header */}
-            <div className="flex items-start justify-between gap-4 px-6 py-5">
+            {/* Header (fixed) */}
+            <div className="flex shrink-0 items-start justify-between gap-4 px-6 py-5">
               <div className="text-right">
                 <h3 className="text-md font-bold text-ink">{config.title}</h3>
                 <p className="mt-1.5 text-xs text-ink-muted">{config.subtitle}</p>
@@ -72,31 +124,21 @@ export function ToolbarSheet({ config, value, onSelect }: ToolbarSheetProps) {
               </button>
             </div>
 
-            {/* Card grid */}
-            <div className="grid grid-cols-2 gap-4 overflow-y-auto px-6 pb-6 scroll-thin sm:grid-cols-3">
-              {config.cards.map((card) => {
-                const selected = card.label === value;
-                return (
-                  <button
+            {/* Scrollable card grid */}
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 scroll-thin">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                {config.cards.map((card) => (
+                  <SheetCardButton
                     key={card.id}
-                    type="button"
-                    onClick={() => {
+                    card={card}
+                    selected={card.label === value}
+                    onSelect={() => {
                       onSelect(card.label);
                       setOpen(false);
                     }}
-                    className={`relative aspect-[226/338] overflow-hidden rounded-3xl bg-gradient-to-br ${card.gradient} text-start transition ${
-                      selected
-                        ? "ring-2 ring-primary ring-offset-2"
-                        : "hover:-translate-y-1"
-                    }`}
-                  >
-                    <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
-                    <span className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-card/95 px-3 py-1 text-[10px] font-bold text-ink shadow-sm">
-                      {card.label}
-                    </span>
-                  </button>
-                );
-              })}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
