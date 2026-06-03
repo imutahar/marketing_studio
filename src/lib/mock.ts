@@ -86,11 +86,3 @@ export function attachmentsForMode(mode: StudioMode): AttachmentSlot[] {
     { id: "img-2", kind: "image", label: "صورة" },
   ];
 }
-
-/** Toolbar option chips differ by mode (matches the two Figma frames). */
-export function toolbarOptionsForMode(mode: StudioMode): string[] {
-  if (mode === "video") {
-    return ["12s", "720p", "9:16", "مراجعة منتج"];
-  }
-  return ["منصة إجتماعية", "صورة انستجرام", "نص عربي"];
-}

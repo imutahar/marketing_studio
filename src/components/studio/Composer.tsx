@@ -1,11 +1,11 @@
 "use client";
 
-import { ArrowUp, Settings2, Plus } from "lucide-react";
+import { ArrowUp, SlidersHorizontal, Plus } from "lucide-react";
 import type { ComposerController } from "@/hooks/useComposer";
 import { Button } from "@/components/ui/Button";
-import { Chip } from "@/components/ui/Chip";
 import { AttachmentSlot } from "./AttachmentSlot";
 import { ModeToggle } from "./ModeToggle";
+import { ToolbarSelect } from "./ToolbarSelect";
 
 interface ComposerProps {
   composer: ComposerController;
@@ -13,18 +13,37 @@ interface ComposerProps {
   isGenerating: boolean;
 }
 
+/** Square icon-only chip (settings / add), matching the toolbar chip height. */
+function IconChip({
+  icon: Icon,
+  label,
+}: {
+  icon: React.ElementType;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      className="flex h-8 items-center justify-center rounded-xl border border-line px-2 text-ink-faint transition-colors hover:border-line-hover"
+    >
+      <Icon className="size-4" strokeWidth={1.75} />
+    </button>
+  );
+}
+
 export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
   const {
     mode,
     prompt,
     slots,
-    options,
-    selectedOptions,
+    selects,
+    selections,
     attachments,
     canSubmit,
     setPrompt,
     changeMode,
-    toggleOption,
+    setSelection,
     setAttachment,
   } = composer;
 
@@ -67,22 +86,18 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
 
         {/* Bottom: toolbar (start/right) + send (end/left) */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button variant="outline" size="sm" aria-label="إعدادات">
-              <Settings2 className="size-4 text-ink-faint" strokeWidth={1.75} />
-            </Button>
-            {options.map((opt) => (
-              <Chip
-                key={opt}
-                active={selectedOptions.includes(opt)}
-                onClick={() => toggleOption(opt)}
-              >
-                {opt}
-              </Chip>
+          {/* dir=ltr pins the visual order to the design: settings (left) … + (right) */}
+          <div dir="ltr" className="flex flex-wrap items-center gap-2">
+            <IconChip icon={SlidersHorizontal} label="إعدادات" />
+            {selects.map((select) => (
+              <ToolbarSelect
+                key={select.id}
+                config={select}
+                value={selections[select.id]}
+                onSelect={(value) => setSelection(select.id, value)}
+              />
             ))}
-            <Button variant="outline" size="sm" aria-label="إضافة خيار">
-              <Plus className="size-4 text-ink-faint" strokeWidth={1.75} />
-            </Button>
+            <IconChip icon={Plus} label="إضافة" />
           </div>
 
           <Button

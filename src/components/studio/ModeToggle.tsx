@@ -1,14 +1,14 @@
 "use client";
 
-import { ImageIcon, Clapperboard } from "lucide-react";
+import { Image as ImageIcon, ListVideo } from "lucide-react";
 import type { StudioMode } from "@/lib/types";
 
 const MODES: { id: StudioMode; label: string; icon: React.ElementType }[] = [
   { id: "image", label: "صورة", icon: ImageIcon },
-  { id: "video", label: "فيديو", icon: Clapperboard },
+  { id: "video", label: "فيديو", icon: ListVideo },
 ];
 
-/** Vertical Image/Video switch that sits on the composer's outer edge. */
+/** Vertical Image/Video switch on the composer's outer edge (matches Figma). */
 export function ModeToggle({
   mode,
   onChange,
@@ -17,7 +17,7 @@ export function ModeToggle({
   onChange: (mode: StudioMode) => void;
 }) {
   return (
-    <div className="flex flex-col gap-1 rounded-3xl border border-line bg-card p-1 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.06)]">
+    <div className="flex h-[147px] w-[76px] flex-col gap-1.5 rounded-[19px] bg-card p-1.5 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.06)]">
       {MODES.map(({ id, label, icon: Icon }) => {
         const active = id === mode;
         return (
@@ -25,12 +25,14 @@ export function ModeToggle({
             key={id}
             type="button"
             onClick={() => onChange(id)}
-            className={`flex w-16 flex-col items-center gap-1 rounded-[14px] px-2 py-2.5 text-xs font-medium transition-colors ${
-              active ? "bg-neutrals text-ink-strong" : "text-ink-faint hover:text-ink"
-            }`}
             aria-pressed={active}
+            className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-2xl text-[10px] font-medium transition-colors ${
+              active
+                ? "bg-card text-ink shadow-[0px_0px_0px_1px_rgba(0,0,0,0.05),0px_0px_6px_3px_rgba(0,0,0,0.05)]"
+                : "text-ink-faint hover:text-ink"
+            }`}
           >
-            <Icon className="size-5" strokeWidth={1.75} />
+            <Icon className="size-[22px]" strokeWidth={1.75} />
             {label}
           </button>
         );

@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { attachmentsForMode, toolbarOptionsForMode } from "@/lib/mock";
+import { attachmentsForMode } from "@/lib/mock";
+import { toolbarSelectsForMode } from "@/lib/toolbar";
 import type {
   AttachmentValue,
   GenerationRequest,
@@ -9,29 +10,38 @@ import type {
   StudioMode,
 } from "@/lib/types";
 
+/** Default selected value for each toolbar selector in a mode. */
+function defaultSelections(mode: StudioMode): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const select of toolbarSelectsForMode(mode)) {
+    if (select.defaultValue) out[select.id] = select.defaultValue;
+  }
+  return out;
+}
+
 /**
- * Single source of truth for the composer: mode, prompt, selected toolbar
- * options, and attachments. `buildRequest()` produces the exact payload a
- * generation backend will consume, so the data shape lives in one place.
+ * Single source of truth for the composer: mode, prompt, toolbar selector
+ * values, and attachments. `buildRequest()` produces the exact payload a
+ * generation backend will consume.
  */
 export function useComposer(initialMode: StudioMode = "video") {
   const [mode, setMode] = useState<StudioMode>(initialMode);
   const [prompt, setPrompt] = useState("");
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [selections, setSelections] = useState<Record<string, string>>(() =>
+    defaultSelections(initialMode),
+  );
   const [attachments, setAttachments] = useState<Record<string, AttachmentValue>>({});
 
   const slots = useMemo(() => attachmentsForMode(mode), [mode]);
-  const options = useMemo(() => toolbarOptionsForMode(mode), [mode]);
+  const selects = useMemo(() => toolbarSelectsForMode(mode), [mode]);
 
   const changeMode = useCallback((next: StudioMode) => {
     setMode(next);
-    setSelectedOptions([]); // toolbar options differ per mode
+    setSelections(defaultSelections(next)); // selectors differ per mode
   }, []);
 
-  const toggleOption = useCallback((option: string) => {
-    setSelectedOptions((prev) =>
-      prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option],
-    );
+  const setSelection = useCallback((id: string, value: string) => {
+    setSelections((prev) => ({ ...prev, [id]: value }));
   }, []);
 
   const setAttachment = useCallback((slotId: string, value: AttachmentValue | null) => {
@@ -46,23 +56,23 @@ export function useComposer(initialMode: StudioMode = "video") {
   const applyPreset = useCallback((preset: Preset) => {
     setMode(preset.mode);
     setPrompt(preset.promptScaffold);
-    setSelectedOptions([]);
+    setSelections(defaultSelections(preset.mode));
   }, []);
 
   const reset = useCallback(() => {
     setPrompt("");
-    setSelectedOptions([]);
+    setSelections(defaultSelections(mode));
     setAttachments({});
-  }, []);
+  }, [mode]);
 
   const buildRequest = useCallback(
     (): GenerationRequest => ({
       mode,
       prompt: prompt.trim(),
-      options: selectedOptions,
+      options: Object.values(selections),
       attachments: Object.values(attachments),
     }),
-    [mode, prompt, selectedOptions, attachments],
+    [mode, prompt, selections, attachments],
   );
 
   const canSubmit = prompt.trim().length > 0;
@@ -72,14 +82,14 @@ export function useComposer(initialMode: StudioMode = "video") {
     mode,
     prompt,
     slots,
-    options,
-    selectedOptions,
+    selects,
+    selections,
     attachments,
     canSubmit,
     // actions
     setPrompt,
     changeMode,
-    toggleOption,
+    setSelection,
     setAttachment,
     applyPreset,
     reset,
