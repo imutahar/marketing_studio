@@ -22,14 +22,18 @@ export interface Preset {
 export interface Project {
   id: string;
   name: string;
+  /** Tailwind text-color class used to tint the project's folder icon. */
+  color: string;
 }
 
-/** A tool entry in the sidebar (URL→ad, MCP connection, reference ad…). */
+/** A tool entry in the sidebar (URL→ad, reference ad, MCP connection). */
 export interface ToolItem {
   id: string;
   label: string;
   icon: "link" | "plug" | "sparkles";
-  isNew?: boolean;
+  /** Optional status badge: new feature, or coming soon (disabled). */
+  badge?: "new" | "soon";
+  disabled?: boolean;
 }
 
 /** A mock store product used by the (future) product picker. */

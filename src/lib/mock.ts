@@ -57,16 +57,16 @@ export const PRESETS: Preset[] = [
 
 /** Saved projects shown in the sidebar (المشاريع). */
 export const PROJECTS: Project[] = [
-  { id: "shower-gel", name: "شاور جل" },
-  { id: "shampoo", name: "شامبو" },
-  { id: "travel-bag", name: "شنطة سفر" },
+  { id: "shower-gel", name: "شاور جل", color: "text-emerald-500" },
+  { id: "shampoo", name: "شامبو", color: "text-amber-500" },
+  { id: "travel-bag", name: "شنطة سفر", color: "text-sky-500" },
 ];
 
-/** Tools shown in the sidebar (أدوات). */
+/** Tools shown in the sidebar (أدوات). Ordered: URL→ad, reference ad, MCP. */
 export const TOOLS: ToolItem[] = [
   { id: "url-to-ad", label: "من رابط إلى إعلان", icon: "link" },
-  { id: "mcp", label: "إتصال MCP", icon: "plug" },
-  { id: "reference-ad", label: "إعلان مرجعي", icon: "sparkles", isNew: true },
+  { id: "reference-ad", label: "إعلان مرجعي", icon: "sparkles", badge: "new" },
+  { id: "mcp", label: "إتصال MCP", icon: "plug", badge: "soon", disabled: true },
 ];
 
 /** Sample store products for the (mocked) product picker. */
