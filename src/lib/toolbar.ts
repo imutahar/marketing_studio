@@ -3,9 +3,9 @@ import {
   Monitor,
   RectangleVertical,
   Film,
-  Share2,
+  Type,
+  Crop,
   Image as ImageIcon,
-  Languages,
   type LucideIcon,
 } from "lucide-react";
 import type { StudioMode } from "./types";
@@ -28,9 +28,9 @@ const VIDEO_SELECTS: ToolbarSelectConfig[] = [
 ];
 
 const IMAGE_SELECTS: ToolbarSelectConfig[] = [
-  { id: "platform", icon: Share2, placeholder: "منصة إجتماعية", options: ["انستجرام", "تيك توك", "سناب شات", "فيسبوك", "اكس"] },
-  { id: "format", icon: ImageIcon, placeholder: "صورة انستجرام", options: ["صورة انستجرام", "ستوري انستجرام", "منشور فيسبوك", "بنر إعلاني"] },
-  { id: "language", icon: Languages, placeholder: "نص عربي", options: ["نص عربي", "نص إنجليزي"] },
+  { id: "language", icon: Type, placeholder: "نص عربي", options: ["نص عربي", "نص إنجليزي"], defaultValue: "نص عربي" },
+  { id: "format", icon: Crop, placeholder: "صورة انستجرام", options: ["صورة انستجرام", "ستوري انستجرام", "منشور فيسبوك", "بنر إعلاني"], defaultValue: "صورة انستجرام" },
+  { id: "imageType", icon: ImageIcon, placeholder: "نوع الصورة", options: ["تلقائي", "واقعي", "ثلاثي الأبعاد", "رسومي"] },
 ];
 
 /** Toolbar selectors differ by mode (matches the two Figma frames). */

@@ -71,18 +71,20 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   { id: "p4", name: "عطر فاخر", price: "٢٨٠ ر.س", gradient: "from-rose-200 to-pink-300" },
 ];
 
-/** Attachment slots differ by mode (matches the two Figma frames). */
+/**
+ * Attachment slots differ by mode (matches the two Figma frames). Product is
+ * required and sits first so it renders on the right (nearest the prompt).
+ */
 export function attachmentsForMode(mode: StudioMode): AttachmentSlot[] {
   if (mode === "video") {
     return [
-      { id: "character", kind: "character", label: "الشخصية" },
       { id: "product", kind: "product", label: "المنتج", required: true },
+      { id: "character", kind: "character", label: "الشخصية" },
     ];
   }
-  // Image mode: required product + a few image slots.
+  // Image mode: required product + an images slot.
   return [
     { id: "product", kind: "product", label: "المنتج", required: true },
-    { id: "img-1", kind: "image", label: "صورة" },
-    { id: "img-2", kind: "image", label: "صورة" },
+    { id: "image", kind: "image", label: "صور" },
   ];
 }
