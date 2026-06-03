@@ -18,6 +18,8 @@ export const PRESETS: Preset[] = [
     mode: "video",
     promptScaffold: "إعلان تلفزيوني سينمائي يبرز المنتج بإضاءة احترافية ولقطات واسعة.",
     gradient: "from-amber-900 via-stone-800 to-neutral-900",
+    video:
+      "https://d8j0ntlcm91z4.cloudfront.net/user_3CIjqzTsrKEUr8OzFBaYO4ux3nG/hf_20260413_121933_7dfa9582-a536-4a83-9041-ee5aa102ff8c.mp4",
   },
   {
     id: "fast-motion",
@@ -34,6 +36,8 @@ export const PRESETS: Preset[] = [
     mode: "video",
     promptScaffold: "مشهد فتح علبة المنتج بأيدٍ أنيقة وإضاءة ناعمة وتركيز على التفاصيل.",
     gradient: "from-rose-500 via-red-500 to-rose-700",
+    video:
+      "https://d8j0ntlcm91z4.cloudfront.net/user_2vV68Ukpv101mL5Dprsk6JvfLMI/hf_20260414_230955_d7382d46-8c96-4e25-8a5f-1785ed64b886.mp4",
   },
   {
     id: "influencers",
@@ -41,6 +45,8 @@ export const PRESETS: Preset[] = [
     mode: "video",
     promptScaffold: "مؤثر يستعرض المنتج بأسلوب UGC طبيعي أمام الكاميرا مع تعليق صوتي.",
     gradient: "from-slate-300 via-slate-400 to-slate-600",
+    video:
+      "https://d8j0ntlcm91z4.cloudfront.net/user_3BtuMjeO56IlCCzTiD419c4NiyM/hf_20260415_011357_9dd4f822-d35c-4a43-9102-61ad0bb14331.mp4",
   },
   {
     id: "explainer",
@@ -48,6 +54,8 @@ export const PRESETS: Preset[] = [
     mode: "video",
     promptScaffold: "فيديو توضيحي يشرح مميزات المنتج خطوة بخطوة بأسلوب بسيط وجذاب.",
     gradient: "from-teal-300 via-cyan-400 to-sky-500",
+    video:
+      "https://d8j0ntlcm91z4.cloudfront.net/user_3Bu8kApHUBmQcoBNUYoyCcOGJne/hf_20260414_232148_e856f696-c60e-4c40-921e-3fc3ac60224f.mp4",
   },
 ];
 
