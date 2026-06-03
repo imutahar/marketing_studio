@@ -14,6 +14,8 @@ export interface Preset {
   promptScaffold: string;
   /** Tailwind gradient classes used for the placeholder thumbnail. */
   gradient: string;
+  /** Optional preview video that autoplays in the card. */
+  video?: string;
 }
 
 /** A saved project in the sidebar. */

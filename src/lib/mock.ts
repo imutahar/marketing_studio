@@ -25,6 +25,8 @@ export const PRESETS: Preset[] = [
     mode: "video",
     promptScaffold: "لقطة بحركة كاميرا سريعة (crash zoom) حول المنتج بخلفية حيوية.",
     gradient: "from-lime-400 via-green-500 to-emerald-700",
+    video:
+      "https://d8j0ntlcm91z4.cloudfront.net/user_34hPp7fXOu4gkTrKKk2ESqFSfG1/hf_20260413_124545_9ae0acdc-4d0e-4c03-a065-b572bf9c66cf.mp4",
   },
   {
     id: "unboxing",

@@ -14,6 +14,18 @@ export function PresetGallery({ onPick }: { onPick: (preset: Preset) => void }) 
           onClick={() => onPick(preset)}
           className={`group relative h-[338px] flex-1 overflow-hidden rounded-3xl bg-gradient-to-br ${preset.gradient} text-start transition-transform hover:-translate-y-1`}
         >
+          {/* autoplay preview video (falls back to the gradient if absent/blocked) */}
+          {preset.video && (
+            <video
+              src={preset.video}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              className="pointer-events-none absolute inset-0 size-full object-cover"
+            />
+          )}
           {/* subtle dark gradient for legibility */}
           <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 to-transparent" />
           {/* category badge */}
