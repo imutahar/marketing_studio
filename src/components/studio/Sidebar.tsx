@@ -1,5 +1,6 @@
 import { Link2, Plug, Sparkles, Plus, Folder } from "lucide-react";
 import { MONTHLY_USAGE_PERCENT, PROJECTS, TOOLS } from "@/lib/mock";
+import type { UsageSummary } from "@/lib/api/usage";
 import type { Project, ToolItem } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { UsageWheel } from "./UsageWheel";
@@ -75,13 +76,25 @@ function Section({
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ usage }: { usage?: UsageSummary | null }) {
+  const percent = usage?.percentUsed ?? MONTHLY_USAGE_PERCENT;
   return (
     <aside className="flex h-full w-[230px] shrink-0 flex-col border-s border-line bg-card px-4 py-4 scroll-thin">
-      {/* Monthly usage */}
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-ink">الاستخدام الشهري</span>
-        <UsageWheel percent={MONTHLY_USAGE_PERCENT} />
+      {/* Monthly token usage */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium text-ink">الاستخدام الشهري</span>
+          <UsageWheel percent={percent} />
+        </div>
+        {usage && (
+          <p className="text-[11px] text-ink-faint">
+            متبقٍ{" "}
+            <span className="font-bold text-ink">
+              {usage.remainingTokens.toLocaleString("en-US")}
+            </span>{" "}
+            من {usage.totalTokens.toLocaleString("en-US")} رمز
+          </p>
+        )}
       </div>
 
       {/* New project */}
