@@ -4,9 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getProjects,
   createProject,
-  renameProject,
+  updateProject,
   deleteProject,
   type Project,
+  type ProjectInput,
 } from "@/lib/api/projects";
 
 const ACTIVE_KEY = "activeProjectId";
@@ -49,19 +50,22 @@ export function useProjects() {
   }, []);
 
   const create = useCallback(
-    async (name: string) => {
-      const project = await createProject(name);
-      setProjects((prev) => [project, ...prev]);
+    async (body: ProjectInput) => {
+      const project = await createProject(body);
+      await refresh();
       setActive(project.id);
       return project;
     },
-    [setActive],
+    [refresh, setActive],
   );
 
-  const rename = useCallback(async (id: string, name: string) => {
-    const updated = await renameProject(id, name);
-    setProjects((prev) => prev.map((p) => (p.id === id ? updated : p)));
-  }, []);
+  const update = useCallback(
+    async (id: string, patch: Partial<ProjectInput>) => {
+      await updateProject(id, patch);
+      await refresh();
+    },
+    [refresh],
+  );
 
   const remove = useCallback(async (id: string) => {
     await deleteProject(id);
@@ -74,5 +78,5 @@ export function useProjects() {
 
   const activeProject = projects.find((p) => p.id === activeId) ?? null;
 
-  return { projects, activeId, activeProject, setActive, create, rename, remove, refresh };
+  return { projects, activeId, activeProject, setActive, create, update, remove, refresh };
 }

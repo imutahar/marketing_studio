@@ -15,9 +15,10 @@ import { ProjectGallery } from "./ProjectGallery";
 import { ResultPanel } from "./ResultPanel";
 import { UrlToAdModal } from "./UrlToAdModal";
 import { AdReferenceModal } from "./AdReferenceModal";
-import { NewProjectModal } from "./NewProjectModal";
+import { ProjectModal } from "./ProjectModal";
 import { AssetsModal } from "./AssetsModal";
 import type { Asset } from "@/lib/api/assets";
+import { getProject, type ProjectDetail, type ProjectInput } from "@/lib/api/projects";
 
 export function StudioScreen() {
   const composer = useComposer("video");
@@ -29,16 +30,36 @@ export function StudioScreen() {
     activeProject,
     setActive,
     create: createProject,
-    rename: renameProject,
+    update: updateProject,
     remove: removeProject,
     refresh: refreshProjects,
   } = useProjects();
 
   const [urlModalOpen, setUrlModalOpen] = useState(false);
   const [adRefModalOpen, setAdRefModalOpen] = useState(false);
-  const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [projectModalOpen, setProjectModalOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<ProjectDetail | null>(null);
   const [assetsOpen, setAssetsOpen] = useState(false);
   const [galleryKey, setGalleryKey] = useState(0);
+
+  function openNewProject() {
+    setEditingProject(null);
+    setProjectModalOpen(true);
+  }
+
+  async function openEditProject(id: string) {
+    try {
+      const detail = await getProject(id);
+      setEditingProject(detail);
+      setProjectModalOpen(true);
+    } catch {
+      // ignore
+    }
+  }
+
+  function submitProject(body: ProjectInput) {
+    return editingProject ? updateProject(editingProject.id, body) : createProject(body);
+  }
 
   function viewAsset(asset: Asset) {
     setAssetsOpen(false);
@@ -108,8 +129,8 @@ export function StudioScreen() {
         projects={projects}
         activeId={activeId}
         onSelectProject={setActive}
-        onNewProject={() => setNewProjectOpen(true)}
-        onRenameProject={(id, name) => void renameProject(id, name)}
+        onNewProject={openNewProject}
+        onEditProject={(id) => void openEditProject(id)}
         onDeleteProject={(id) => void removeProject(id)}
       />
 
@@ -167,10 +188,11 @@ export function StudioScreen() {
         }}
       />
 
-      <NewProjectModal
-        open={newProjectOpen}
-        onClose={() => setNewProjectOpen(false)}
-        onCreate={createProject}
+      <ProjectModal
+        open={projectModalOpen}
+        onClose={() => setProjectModalOpen(false)}
+        project={editingProject}
+        onSubmit={submitProject}
       />
 
       <AssetsModal

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Link2,
   Plug,
@@ -67,42 +66,17 @@ function ProjectNavItem({
   color,
   active,
   onSelect,
-  onRename,
+  onEdit,
   onDelete,
 }: {
   project: Project;
   color: string;
   active: boolean;
   onSelect: () => void;
-  onRename: (name: string) => void;
+  onEdit: () => void;
   onDelete: () => void;
 }) {
   const { open, setOpen, ref } = usePopover();
-  const [renaming, setRenaming] = useState(false);
-  const [name, setName] = useState(project.name);
-
-  function submitRename() {
-    const next = name.trim();
-    if (next && next !== project.name) onRename(next);
-    setRenaming(false);
-  }
-
-  if (renaming) {
-    return (
-      <input
-        autoFocus
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        onBlur={submitRename}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") submitRename();
-          if (e.key === "Escape") setRenaming(false);
-        }}
-        className="h-8 w-full rounded-xl border border-line bg-card px-2 text-sm text-ink outline-none focus:border-line-hover"
-        aria-label="اسم المشروع"
-      />
-    );
-  }
 
   return (
     <div className="group relative flex items-center" ref={ref}>
@@ -137,13 +111,12 @@ function ProjectNavItem({
             <button
               type="button"
               onClick={() => {
-                setName(project.name);
-                setRenaming(true);
                 setOpen(false);
+                onEdit();
               }}
               className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-ink transition-colors hover:bg-neutrals"
             >
-              <Pencil className="size-3.5" strokeWidth={1.75} /> إعادة تسمية
+              <Pencil className="size-3.5" strokeWidth={1.75} /> إعدادات المشروع
             </button>
           </li>
           <li>
@@ -184,7 +157,7 @@ interface SidebarProps {
   activeId: string | null;
   onSelectProject: (id: string) => void;
   onNewProject: () => void;
-  onRenameProject: (id: string, name: string) => void;
+  onEditProject: (id: string) => void;
   onDeleteProject: (id: string) => void;
 }
 
@@ -196,7 +169,7 @@ export function Sidebar({
   activeId,
   onSelectProject,
   onNewProject,
-  onRenameProject,
+  onEditProject,
   onDeleteProject,
 }: SidebarProps) {
   const percent = usage?.percentUsed ?? MONTHLY_USAGE_PERCENT;
@@ -258,7 +231,7 @@ export function Sidebar({
                 color={PROJECT_COLORS[i % PROJECT_COLORS.length]}
                 active={project.id === activeId}
                 onSelect={() => onSelectProject(project.id)}
-                onRename={(name) => onRenameProject(project.id, name)}
+                onEdit={() => onEditProject(project.id)}
                 onDelete={() => onDeleteProject(project.id)}
               />
             ))
