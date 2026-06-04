@@ -1,9 +1,16 @@
-// Product extraction for the "Url to Ad" flow.
-//
-// MVP: mocked (no real scraping yet). Swap the body of `extractProduct` for a
-// call to the backend `POST /api/extract` (JSON-LD + OpenGraph scraping) later
-// — the ProductInfo shape stays the same.
+import { fetchJson } from "./client";
 
+/** Product info as returned by the backend extractor. */
+interface ExtractResponse {
+  title: string;
+  description?: string;
+  price?: string;
+  currency?: string;
+  images: string[];
+  sourceUrl: string;
+}
+
+/** Flattened shape the UI consumes (single primary image). */
 export interface ProductInfo {
   title: string;
   description?: string;
@@ -12,23 +19,24 @@ export interface ProductInfo {
   sourceUrl: string;
 }
 
-export async function extractProduct(url: string): Promise<ProductInfo> {
-  await new Promise((r) => setTimeout(r, 1200)); // fake scrape latency
+const FALLBACK_IMAGE = "https://picsum.photos/seed/product/640/640";
 
-  const clean = url
-    .trim()
-    .replace(/^https?:\/\//, "")
-    .replace(/\?.*$/, "")
-    .replace(/\/+$/, "");
-  const lastSegment = clean.split("/").filter(Boolean).pop() ?? "";
-  const guessed = decodeURIComponent(lastSegment).replace(/[-_]+/g, " ").trim();
-  const seed = encodeURIComponent(clean).slice(0, 24) || "product";
+/** Extract product details from a URL via the backend (JSON-LD + OpenGraph). */
+export async function extractProduct(url: string): Promise<ProductInfo> {
+  const res = await fetchJson<ExtractResponse>("/api/extract", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+
+  const price =
+    res.price && res.currency ? `${res.price} ${res.currency}` : res.price;
 
   return {
-    title: guessed.length > 2 ? guessed : "منتج من المتجر",
-    description: "منتج مميز من متجرك، جاهز للتحويل إلى إعلان فيديو.",
-    price: "١٢٩ ر.س",
-    image: `https://picsum.photos/seed/${seed}/640/640`,
-    sourceUrl: url,
+    title: res.title,
+    description: res.description,
+    price,
+    image: res.images[0] ?? FALLBACK_IMAGE,
+    sourceUrl: res.sourceUrl,
   };
 }

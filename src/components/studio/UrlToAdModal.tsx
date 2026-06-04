@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import Image from "next/image";
 import {
   X,
   Link2,
@@ -211,6 +212,16 @@ export function UrlToAdModal({ open, onClose, onGenerate }: UrlToAdModalProps) {
             <div className="shrink-0 px-6">
               <h2 className="text-2xl font-bold text-ink-strong">اختر أسلوبًا وابدأ</h2>
               <p className="mt-1 text-sm text-ink-muted">اختر ما يناسب منتجك.</p>
+              {product && (
+                <div className="mt-3 inline-flex items-center gap-2 rounded-xl border border-line p-1.5 pe-3">
+                  <span className="relative size-8 shrink-0 overflow-hidden rounded-lg bg-neutrals">
+                    <Image src={product.image} alt={product.title} fill className="object-cover" unoptimized />
+                  </span>
+                  <span className="max-w-[240px] truncate text-xs font-medium text-ink">
+                    {product.title}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Style grid (scrollable) */}
