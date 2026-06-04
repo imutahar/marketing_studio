@@ -1,7 +1,21 @@
-import { Link2, Plug, Sparkles, Plus, Folder } from "lucide-react";
-import { MONTHLY_USAGE_PERCENT, PROJECTS, TOOLS } from "@/lib/mock";
+"use client";
+
+import { useState } from "react";
+import {
+  Link2,
+  Plug,
+  Sparkles,
+  Plus,
+  Folder,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+import { MONTHLY_USAGE_PERCENT, TOOLS } from "@/lib/mock";
 import type { UsageSummary } from "@/lib/api/usage";
-import type { Project, ToolItem } from "@/lib/types";
+import type { Project } from "@/lib/api/projects";
+import type { ToolItem } from "@/lib/types";
+import { usePopover } from "@/hooks/usePopover";
 import { Button } from "@/components/ui/Button";
 import { UsageWheel } from "./UsageWheel";
 
@@ -11,11 +25,17 @@ const TOOL_ICONS = {
   sparkles: Sparkles,
 } as const;
 
+const PROJECT_COLORS = [
+  "text-emerald-500",
+  "text-amber-500",
+  "text-sky-500",
+  "text-rose-500",
+  "text-violet-500",
+  "text-cyan-500",
+];
+
 function Badge({ kind }: { kind: "new" | "soon" }) {
-  const styles =
-    kind === "new"
-      ? "bg-danger-soft text-danger"
-      : "bg-neutrals text-ink-faint";
+  const styles = kind === "new" ? "bg-danger-soft text-danger" : "bg-neutrals text-ink-faint";
   return (
     <span className={`ms-auto rounded-full px-1.5 py-0.5 text-[10px] font-bold ${styles}`}>
       {kind === "new" ? "جديد" : "قريباً"}
@@ -23,13 +43,7 @@ function Badge({ kind }: { kind: "new" | "soon" }) {
   );
 }
 
-function ToolNavItem({
-  tool,
-  onSelect,
-}: {
-  tool: ToolItem;
-  onSelect?: (id: string) => void;
-}) {
+function ToolNavItem({ tool, onSelect }: { tool: ToolItem; onSelect?: (id: string) => void }) {
   const Icon = TOOL_ICONS[tool.icon];
   return (
     <button
@@ -37,9 +51,7 @@ function ToolNavItem({
       disabled={tool.disabled}
       onClick={() => onSelect?.(tool.id)}
       className={`flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-sm transition-colors ${
-        tool.disabled
-          ? "cursor-default text-ink-faint"
-          : "text-ink hover:bg-neutrals"
+        tool.disabled ? "cursor-default text-ink-faint" : "text-ink hover:bg-neutrals"
       }`}
     >
       <Icon className="size-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
@@ -49,48 +61,143 @@ function ToolNavItem({
   );
 }
 
-function ProjectNavItem({ project }: { project: Project }) {
+function ProjectNavItem({
+  project,
+  color,
+  active,
+  onSelect,
+  onRename,
+  onDelete,
+}: {
+  project: Project;
+  color: string;
+  active: boolean;
+  onSelect: () => void;
+  onRename: (name: string) => void;
+  onDelete: () => void;
+}) {
+  const { open, setOpen, ref } = usePopover();
+  const [renaming, setRenaming] = useState(false);
+  const [name, setName] = useState(project.name);
+
+  function submitRename() {
+    const next = name.trim();
+    if (next && next !== project.name) onRename(next);
+    setRenaming(false);
+  }
+
+  if (renaming) {
+    return (
+      <input
+        autoFocus
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onBlur={submitRename}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") submitRename();
+          if (e.key === "Escape") setRenaming(false);
+        }}
+        className="h-8 w-full rounded-xl border border-line bg-card px-2 text-sm text-ink outline-none focus:border-line-hover"
+        aria-label="اسم المشروع"
+      />
+    );
+  }
+
   return (
-    <button
-      type="button"
-      className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-ink transition-colors hover:bg-neutrals"
-    >
-      <Folder className={`size-4 shrink-0 ${project.color}`} strokeWidth={1.75} />
-      <span className="truncate">{project.name}</span>
-    </button>
+    <div className="group relative flex items-center" ref={ref}>
+      <button
+        type="button"
+        onClick={onSelect}
+        className={`flex flex-1 items-center gap-2 rounded-xl px-2 py-1.5 text-sm transition-colors ${
+          active ? "bg-neutrals font-medium text-ink" : "text-ink hover:bg-neutrals"
+        }`}
+      >
+        <Folder className={`size-4 shrink-0 ${color}`} strokeWidth={1.75} />
+        <span className="truncate">{project.name}</span>
+        {project.generationCount > 0 && (
+          <span className="ms-auto text-[10px] text-ink-faint group-hover:opacity-0">
+            {project.generationCount}
+          </span>
+        )}
+      </button>
+
+      <button
+        type="button"
+        aria-label="خيارات المشروع"
+        onClick={() => setOpen((o) => !o)}
+        className="absolute end-1 hidden rounded-md p-1 text-ink-faint hover:bg-line group-hover:block"
+      >
+        <MoreHorizontal className="size-4" strokeWidth={2} />
+      </button>
+
+      {open && (
+        <ul className="absolute end-0 top-full z-20 mt-1 min-w-[140px] overflow-hidden rounded-xl border border-line bg-card py-1 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.1)]">
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                setName(project.name);
+                setRenaming(true);
+                setOpen(false);
+              }}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-ink transition-colors hover:bg-neutrals"
+            >
+              <Pencil className="size-3.5" strokeWidth={1.75} /> إعادة تسمية
+            </button>
+          </li>
+          <li>
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                onDelete();
+              }}
+              className="flex w-full items-center gap-2 px-3 py-1.5 text-sm text-danger transition-colors hover:bg-danger-soft"
+            >
+              <Trash2 className="size-3.5" strokeWidth={1.75} /> حذف
+            </button>
+          </li>
+        </ul>
+      )}
+    </div>
   );
 }
 
-function Section({
-  title,
-  count,
-  children,
-}: {
-  title: string;
-  count?: number;
-  children: React.ReactNode;
-}) {
+function Section({ title, count, children }: { title: string; count?: number; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1">
       <h3 className="flex items-center gap-1.5 px-2 pb-1 text-xs font-medium text-ink-faint">
         {title}
-        {count !== undefined && (
-          <span className="text-ink-faint/70">({count})</span>
-        )}
+        {count !== undefined && <span className="text-ink-faint/70">({count})</span>}
       </h3>
       {children}
     </div>
   );
 }
 
+interface SidebarProps {
+  usage?: UsageSummary | null;
+  onToolSelect?: (id: string) => void;
+  projects: Project[];
+  activeId: string | null;
+  onSelectProject: (id: string) => void;
+  onNewProject: () => void;
+  onRenameProject: (id: string, name: string) => void;
+  onDeleteProject: (id: string) => void;
+}
+
 export function Sidebar({
   usage,
   onToolSelect,
-}: {
-  usage?: UsageSummary | null;
-  onToolSelect?: (id: string) => void;
-}) {
+  projects,
+  activeId,
+  onSelectProject,
+  onNewProject,
+  onRenameProject,
+  onDeleteProject,
+}: SidebarProps) {
   const percent = usage?.percentUsed ?? MONTHLY_USAGE_PERCENT;
+
   return (
     <aside className="flex h-full w-[230px] shrink-0 flex-col border-s border-line bg-card px-4 py-4 scroll-thin">
       {/* Monthly token usage */}
@@ -111,7 +218,7 @@ export function Sidebar({
       </div>
 
       {/* New project */}
-      <Button variant="outline" className="mt-5 w-full">
+      <Button variant="outline" className="mt-5 w-full" onClick={onNewProject}>
         <Plus className="size-4" strokeWidth={2} />
         مشروع جديد
       </Button>
@@ -125,12 +232,24 @@ export function Sidebar({
         </Section>
       </div>
 
-      {/* Projects (divider for clearer separation) */}
-      <div className="mt-6 border-t border-line pt-5">
-        <Section title="المشاريع" count={PROJECTS.length}>
-          {PROJECTS.map((project) => (
-            <ProjectNavItem key={project.id} project={project} />
-          ))}
+      {/* Projects */}
+      <div className="mt-6 min-h-0 flex-1 overflow-y-auto border-t border-line pt-5 scroll-thin">
+        <Section title="المشاريع" count={projects.length}>
+          {projects.length === 0 ? (
+            <p className="px-2 py-3 text-xs text-ink-faint">لا توجد مشاريع بعد.</p>
+          ) : (
+            projects.map((project, i) => (
+              <ProjectNavItem
+                key={project.id}
+                project={project}
+                color={PROJECT_COLORS[i % PROJECT_COLORS.length]}
+                active={project.id === activeId}
+                onSelect={() => onSelectProject(project.id)}
+                onRename={(name) => onRenameProject(project.id, name)}
+                onDelete={() => onDeleteProject(project.id)}
+              />
+            ))
+          )}
         </Section>
       </div>
     </aside>

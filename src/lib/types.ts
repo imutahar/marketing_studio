@@ -74,6 +74,8 @@ export interface GenerationRequest {
   /** Selected toolbar option labels (duration, ratio, platform, …). */
   options: string[];
   attachments: AttachmentValue[];
+  /** Owning project, if any. */
+  projectId?: string;
 }
 
 /** A single generated asset returned by the backend. */

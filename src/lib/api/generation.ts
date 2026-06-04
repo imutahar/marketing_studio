@@ -35,6 +35,7 @@ function toPayload(request: GenerationRequest) {
   return {
     mode: request.mode,
     prompt: request.prompt,
+    projectId: request.projectId,
     options: request.options,
     // previewUrl is a base64 data URI of the (downscaled) uploaded image, which
     // the provider can consume directly as the image-to-image/video reference.

@@ -46,6 +46,14 @@ export function useGeneration() {
     [run],
   );
 
+  /** Show an existing generation (e.g. opening one from the project gallery). */
+  const show = useCallback((generation: Generation) => {
+    controller.current?.abort();
+    setResult(generation);
+    setStatus("result");
+    setError(null);
+  }, []);
+
   const reset = useCallback(() => {
     controller.current?.abort();
     setStatus("idle");
@@ -55,5 +63,5 @@ export function useGeneration() {
 
   useEffect(() => () => controller.current?.abort(), []);
 
-  return { status, result, error, start, track, reset };
+  return { status, result, error, start, track, show, reset };
 }
