@@ -10,6 +10,7 @@ import {
   MoreHorizontal,
   Pencil,
   Trash2,
+  LayoutGrid,
 } from "lucide-react";
 import { MONTHLY_USAGE_PERCENT, TOOLS } from "@/lib/mock";
 import type { UsageSummary } from "@/lib/api/usage";
@@ -178,6 +179,7 @@ function Section({ title, count, children }: { title: string; count?: number; ch
 interface SidebarProps {
   usage?: UsageSummary | null;
   onToolSelect?: (id: string) => void;
+  onOpenAssets: () => void;
   projects: Project[];
   activeId: string | null;
   onSelectProject: (id: string) => void;
@@ -189,6 +191,7 @@ interface SidebarProps {
 export function Sidebar({
   usage,
   onToolSelect,
+  onOpenAssets,
   projects,
   activeId,
   onSelectProject,
@@ -231,6 +234,16 @@ export function Sidebar({
           ))}
         </Section>
       </div>
+
+      {/* Assets — global media library */}
+      <button
+        type="button"
+        onClick={onOpenAssets}
+        className="mt-2 flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-ink transition-colors hover:bg-neutrals"
+      >
+        <LayoutGrid className="size-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
+        الأصول
+      </button>
 
       {/* Projects */}
       <div className="mt-6 min-h-0 flex-1 overflow-y-auto border-t border-line pt-5 scroll-thin">

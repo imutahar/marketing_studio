@@ -16,6 +16,8 @@ import { ResultPanel } from "./ResultPanel";
 import { UrlToAdModal } from "./UrlToAdModal";
 import { AdReferenceModal } from "./AdReferenceModal";
 import { NewProjectModal } from "./NewProjectModal";
+import { AssetsModal } from "./AssetsModal";
+import type { Asset } from "@/lib/api/assets";
 
 export function StudioScreen() {
   const composer = useComposer("video");
@@ -35,7 +37,19 @@ export function StudioScreen() {
   const [urlModalOpen, setUrlModalOpen] = useState(false);
   const [adRefModalOpen, setAdRefModalOpen] = useState(false);
   const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [assetsOpen, setAssetsOpen] = useState(false);
   const [galleryKey, setGalleryKey] = useState(0);
+
+  function viewAsset(asset: Asset) {
+    setAssetsOpen(false);
+    show({
+      id: asset.id,
+      status: "succeeded",
+      request: { mode: asset.type, prompt: asset.prompt ?? "", options: [], attachments: [] },
+      outputs: [{ type: asset.type, url: asset.url }],
+      createdAt: asset.createdAt,
+    });
+  }
 
   // After a finished job: refresh usage + the active project's summary.
   useEffect(() => {
@@ -90,6 +104,7 @@ export function StudioScreen() {
       <Sidebar
         usage={usage}
         onToolSelect={handleToolSelect}
+        onOpenAssets={() => setAssetsOpen(true)}
         projects={projects}
         activeId={activeId}
         onSelectProject={setActive}
@@ -156,6 +171,12 @@ export function StudioScreen() {
         open={newProjectOpen}
         onClose={() => setNewProjectOpen(false)}
         onCreate={createProject}
+      />
+
+      <AssetsModal
+        open={assetsOpen}
+        onClose={() => setAssetsOpen(false)}
+        onView={viewAsset}
       />
     </div>
   );
