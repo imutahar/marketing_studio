@@ -10,6 +10,7 @@ import { ToolbarSelect } from "./ToolbarSelect";
 import { ToolbarSlider } from "./ToolbarSlider";
 import { ToolbarSheet } from "./ToolbarSheet";
 import { CharacterModal } from "./CharacterModal";
+import { ProductModal } from "./ProductModal";
 
 interface ComposerProps {
   composer: ComposerController;
@@ -52,6 +53,7 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
   } = composer;
 
   const [characterOpen, setCharacterOpen] = useState(false);
+  const [productOpen, setProductOpen] = useState(false);
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -88,7 +90,9 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
                 onPick={
                   slot.kind === "character"
                     ? () => setCharacterOpen(true)
-                    : undefined
+                    : slot.kind === "product"
+                      ? () => setProductOpen(true)
+                      : undefined
                 }
               />
             ))}
@@ -159,6 +163,21 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
             previewUrl: avatar.image,
           });
           setCharacterOpen(false);
+        }}
+      />
+
+      <ProductModal
+        open={productOpen}
+        onClose={() => setProductOpen(false)}
+        selectedImage={attachments.product?.previewUrl}
+        onSelect={(product) => {
+          setAttachment("product", {
+            slotId: "product",
+            kind: "product",
+            fileName: product.name,
+            previewUrl: product.image,
+          });
+          setProductOpen(false);
         }}
       />
     </div>
