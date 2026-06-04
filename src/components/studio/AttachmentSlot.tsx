@@ -16,19 +16,21 @@ interface AttachmentSlotProps {
   slot: Slot;
   value?: AttachmentValue;
   onChange: (slotId: string, value: AttachmentValue | null) => void;
+  /** Overrides the default file-upload click (e.g. open a picker modal). */
+  onPick?: () => void;
 }
 
 /**
- * 80×80 attachment card inside the composer. On upload the image is downscaled
- * and stored as a base64 data URI (used for both the thumbnail and as the
- * generation input), so it can be sent to the backend/provider directly.
+ * 80×80 attachment card inside the composer. Default = simple image upload;
+ * pass `onPick` to open a picker instead (e.g. the character/avatar modal).
+ * Shows the chosen image as a thumbnail.
  */
-export function AttachmentSlot({ slot, value, onChange }: AttachmentSlotProps) {
+export function AttachmentSlot({ slot, value, onChange, onPick }: AttachmentSlotProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const Icon = KIND_ICON[slot.kind];
 
-  async function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setLoading(true);
@@ -48,7 +50,7 @@ export function AttachmentSlot({ slot, value, onChange }: AttachmentSlotProps) {
   return (
     <button
       type="button"
-      onClick={() => inputRef.current?.click()}
+      onClick={() => (onPick ? onPick() : inputRef.current?.click())}
       className="relative size-20 shrink-0 overflow-hidden rounded-3xl bg-card shadow-[0px_0px_0px_1px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-[0px_0px_0px_1px_rgba(0,0,0,0.12)]"
       aria-label={`إضافة ${slot.label}`}
     >
@@ -74,7 +76,7 @@ export function AttachmentSlot({ slot, value, onChange }: AttachmentSlotProps) {
         {slot.required && <span className="text-danger"> *</span>}
       </span>
 
-      <input ref={inputRef} type="file" accept="image/*" hidden onChange={onPick} />
+      <input ref={inputRef} type="file" accept="image/*" hidden onChange={handleFile} />
     </button>
   );
 }

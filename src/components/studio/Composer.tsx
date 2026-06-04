@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowUp, SlidersHorizontal, Plus } from "lucide-react";
 import type { ComposerController } from "@/hooks/useComposer";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +9,7 @@ import { ModeToggle } from "./ModeToggle";
 import { ToolbarSelect } from "./ToolbarSelect";
 import { ToolbarSlider } from "./ToolbarSlider";
 import { ToolbarSheet } from "./ToolbarSheet";
+import { CharacterModal } from "./CharacterModal";
 
 interface ComposerProps {
   composer: ComposerController;
@@ -49,6 +51,8 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
     setAttachment,
   } = composer;
 
+  const [characterOpen, setCharacterOpen] = useState(false);
+
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
@@ -81,6 +85,11 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
                 slot={slot}
                 value={attachments[slot.id]}
                 onChange={setAttachment}
+                onPick={
+                  slot.kind === "character"
+                    ? () => setCharacterOpen(true)
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -138,6 +147,20 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
 
       {/* Mode toggle on the outer (end/left) edge */}
       <ModeToggle mode={mode} onChange={changeMode} />
+
+      <CharacterModal
+        open={characterOpen}
+        onClose={() => setCharacterOpen(false)}
+        onSelect={(avatar) => {
+          setAttachment("character", {
+            slotId: "character",
+            kind: "character",
+            fileName: avatar.name,
+            previewUrl: avatar.image,
+          });
+          setCharacterOpen(false);
+        }}
+      />
     </div>
   );
 }
