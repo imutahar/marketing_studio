@@ -22,6 +22,14 @@ export async function generateAd(
   return pollUntilDone(created.id, signal);
 }
 
+/** Poll an already-created generation (e.g. started by the ad-reference flow). */
+export function trackGeneration(
+  id: string,
+  { signal }: { signal?: AbortSignal } = {},
+): Promise<Generation> {
+  return pollUntilDone(id, signal);
+}
+
 /** Map the composer request to the backend DTO. */
 function toPayload(request: GenerationRequest) {
   return {

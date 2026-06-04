@@ -12,12 +12,14 @@ import { Composer } from "./Composer";
 import { PresetGallery } from "./PresetGallery";
 import { ResultPanel } from "./ResultPanel";
 import { UrlToAdModal } from "./UrlToAdModal";
+import { AdReferenceModal } from "./AdReferenceModal";
 
 export function StudioScreen() {
   const composer = useComposer("video");
-  const { status, result, error, start, reset: resetGeneration } = useGeneration();
+  const { status, result, error, start, track, reset: resetGeneration } = useGeneration();
   const { usage, refresh: refreshUsage } = useUsage();
   const [urlModalOpen, setUrlModalOpen] = useState(false);
+  const [adRefModalOpen, setAdRefModalOpen] = useState(false);
 
   // A finished job consumes tokens — refresh the monthly usage.
   useEffect(() => {
@@ -26,6 +28,7 @@ export function StudioScreen() {
 
   function handleToolSelect(id: string) {
     if (id === "url-to-ad") setUrlModalOpen(true);
+    else if (id === "reference-ad") setAdRefModalOpen(true);
   }
 
   function handleGenerateFromUrl({ product, style, duration, resolution }: UrlToAdResult) {
@@ -114,6 +117,15 @@ export function StudioScreen() {
         open={urlModalOpen}
         onClose={() => setUrlModalOpen(false)}
         onGenerate={handleGenerateFromUrl}
+      />
+
+      <AdReferenceModal
+        open={adRefModalOpen}
+        onClose={() => setAdRefModalOpen(false)}
+        onGenerate={(generationId) => {
+          setAdRefModalOpen(false);
+          track(generationId);
+        }}
       />
     </div>
   );
