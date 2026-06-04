@@ -29,7 +29,10 @@ export function StudioScreen() {
   }
 
   function handleGenerateFromUrl({ product, style, duration, resolution }: UrlToAdResult) {
-    const prompt = `إعلان فيديو بأسلوب ${style.label} يبرز ${product.title}.`;
+    // Use the scraped content (title + description) to seed a richer prompt.
+    const base = `إعلان فيديو احترافي بأسلوب ${style.label} يبرز ${product.title}`;
+    const description = product.description?.trim().slice(0, 220);
+    const prompt = description ? `${base}. ${description}` : `${base}.`;
     const selections = { videoType: style.label, duration, resolution };
     // Reflect the choice in the composer UI...
     composer.applyProduct({ prompt, imageUrl: product.image, fileName: product.title, selections });
