@@ -155,6 +155,7 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
       <CharacterModal
         open={characterOpen}
         onClose={() => setCharacterOpen(false)}
+        selectedImage={attachments.character?.previewUrl}
         onSelect={(avatar) => {
           setAttachment("character", {
             slotId: "character",
@@ -176,6 +177,15 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
             kind: "product",
             fileName: product.name,
             previewUrl: product.image,
+          });
+          setProductOpen(false);
+        }}
+        onUpload={(dataUrl, fileName) => {
+          setAttachment("product", {
+            slotId: "product",
+            kind: "product",
+            fileName,
+            previewUrl: dataUrl,
           });
           setProductOpen(false);
         }}
