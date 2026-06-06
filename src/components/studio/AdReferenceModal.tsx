@@ -31,6 +31,8 @@ import { ReferenceVideoModal } from "./ReferenceVideoModal";
 interface AdReferenceModalProps {
   open: boolean;
   onClose: () => void;
+  /** Active project the generation should belong to. */
+  projectId?: string | null;
   /** Called with the generation id once a video is kicked off. */
   onGenerate: (generationId: string) => void;
 }
@@ -78,7 +80,7 @@ function MiniSlot({
   );
 }
 
-export function AdReferenceModal({ open, onClose, onGenerate }: AdReferenceModalProps) {
+export function AdReferenceModal({ open, onClose, projectId, onGenerate }: AdReferenceModalProps) {
   const [step, setStep] = useState<"intro" | "analyzing" | "review">("intro");
   const [referenceVideo, setReferenceVideo] = useState<string | null>(null);
   const [productImage, setProductImage] = useState<string>();
@@ -173,6 +175,7 @@ export function AdReferenceModal({ open, onClose, onGenerate }: AdReferenceModal
         resolution,
         aspectRatio,
         variations,
+        projectId: projectId ?? undefined,
       });
       onGenerate(generationId);
       close();

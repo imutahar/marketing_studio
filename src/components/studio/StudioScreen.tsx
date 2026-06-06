@@ -182,6 +182,7 @@ export function StudioScreen() {
       <AdReferenceModal
         open={adRefModalOpen}
         onClose={() => setAdRefModalOpen(false)}
+        projectId={activeId}
         onGenerate={(generationId) => {
           setAdRefModalOpen(false);
           track(generationId);

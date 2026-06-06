@@ -59,6 +59,7 @@ export function updateAdScript(id: string, script: AdScript): Promise<AdReferenc
 export interface GenerateReferenceParams {
   resolution?: string;
   aspectRatio?: string;
+  projectId?: string;
   variations?: number;
 }
 
