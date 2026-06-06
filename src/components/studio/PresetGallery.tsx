@@ -25,6 +25,9 @@ function PresetCard({ preset, onPick }: { preset: Preset; onPick: () => void }) 
           loop
           playsInline
           preload="metadata"
+          // Some browser extensions tag <video> elements (e.g. data-video="0"),
+          // mutating the DOM before hydration. Tolerate that mismatch.
+          suppressHydrationWarning
           className="pointer-events-none absolute inset-0 size-full object-cover"
         />
       )}
