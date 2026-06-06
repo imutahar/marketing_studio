@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ArrowUp, Plus } from "lucide-react";
 import type { ComposerController } from "@/hooks/useComposer";
-import { fileToDownscaledDataUrl } from "@/lib/image";
 import type { AttachmentSlot as Slot } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { AttachmentSlot } from "./AttachmentSlot";
@@ -14,6 +13,7 @@ import { ToolbarSheet } from "./ToolbarSheet";
 import { ToolbarSettings } from "./ToolbarSettings";
 import { CharacterModal } from "./CharacterModal";
 import { ProductModal } from "./ProductModal";
+import { MediaLibraryModal } from "./MediaLibraryModal";
 
 interface ComposerProps {
   composer: ComposerController;
@@ -43,7 +43,7 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
 
   const [characterOpen, setCharacterOpen] = useState(false);
   const [productOpen, setProductOpen] = useState(false);
-  const refInputRef = useRef<HTMLInputElement>(null);
+  const [mediaOpen, setMediaOpen] = useState(false);
 
   // Extra reference images added via the ➕ button (not part of the fixed slots).
   const extraRefs = Object.values(attachments).filter(
@@ -55,12 +55,6 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
       e.preventDefault();
       onSubmit();
     }
-  }
-
-  async function handleAddRef(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) addReferenceImage(await fileToDownscaledDataUrl(file), file.name);
-    e.target.value = "";
   }
 
   return (
@@ -154,12 +148,11 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
               type="button"
               aria-label="إضافة صورة مرجعية"
               disabled={extraRefs.length >= MAX_EXTRA_REFS}
-              onClick={() => refInputRef.current?.click()}
+              onClick={() => setMediaOpen(true)}
               className="flex h-8 items-center justify-center rounded-xl border border-line px-2 text-ink-faint transition-colors hover:border-line-hover disabled:opacity-40"
             >
               <Plus className="size-4" strokeWidth={1.75} />
             </button>
-            <input ref={refInputRef} type="file" accept="image/*" hidden onChange={handleAddRef} />
           </div>
 
           <Button
@@ -213,6 +206,15 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
             previewUrl: dataUrl,
           });
           setProductOpen(false);
+        }}
+      />
+
+      <MediaLibraryModal
+        open={mediaOpen}
+        onClose={() => setMediaOpen(false)}
+        onSelect={(url, name) => {
+          addReferenceImage(url, name);
+          setMediaOpen(false);
         }}
       />
     </div>
