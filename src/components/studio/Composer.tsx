@@ -1,14 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowUp, SlidersHorizontal, Plus } from "lucide-react";
+import { useRef, useState } from "react";
+import { ArrowUp, Plus } from "lucide-react";
 import type { ComposerController } from "@/hooks/useComposer";
+import { fileToDownscaledDataUrl } from "@/lib/image";
+import type { AttachmentSlot as Slot } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { AttachmentSlot } from "./AttachmentSlot";
 import { ModeToggle } from "./ModeToggle";
 import { ToolbarSelect } from "./ToolbarSelect";
 import { ToolbarSlider } from "./ToolbarSlider";
 import { ToolbarSheet } from "./ToolbarSheet";
+import { ToolbarSettings } from "./ToolbarSettings";
 import { CharacterModal } from "./CharacterModal";
 import { ProductModal } from "./ProductModal";
 
@@ -18,24 +21,7 @@ interface ComposerProps {
   isGenerating: boolean;
 }
 
-/** Square icon-only chip (settings / add), matching the toolbar chip height. */
-function IconChip({
-  icon: Icon,
-  label,
-}: {
-  icon: React.ElementType;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      className="flex h-8 items-center justify-center rounded-xl border border-line px-2 text-ink-faint transition-colors hover:border-line-hover"
-    >
-      <Icon className="size-4" strokeWidth={1.75} />
-    </button>
-  );
-}
+const MAX_EXTRA_REFS = 3;
 
 export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
   const {
@@ -45,21 +31,36 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
     selects,
     selections,
     attachments,
+    settings,
     canSubmit,
     setPrompt,
     changeMode,
     setSelection,
     setAttachment,
+    addReferenceImage,
+    setSettings,
   } = composer;
 
   const [characterOpen, setCharacterOpen] = useState(false);
   const [productOpen, setProductOpen] = useState(false);
+  const refInputRef = useRef<HTMLInputElement>(null);
+
+  // Extra reference images added via the ➕ button (not part of the fixed slots).
+  const extraRefs = Object.values(attachments).filter(
+    (a) => !slots.some((s) => s.id === a.slotId),
+  );
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       onSubmit();
     }
+  }
+
+  async function handleAddRef(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) addReferenceImage(await fileToDownscaledDataUrl(file), file.name);
+    e.target.value = "";
   }
 
   return (
@@ -80,7 +81,7 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
             placeholder="اوصف ما يحدث في إعلانك..."
             className="min-h-[56px] flex-1 resize-none bg-transparent text-md leading-6 text-ink outline-none placeholder:text-ink-muted"
           />
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 flex-wrap justify-end gap-2">
             {slots.map((slot) => (
               <AttachmentSlot
                 key={slot.id}
@@ -96,6 +97,17 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
                 }
               />
             ))}
+            {extraRefs.map((ref) => {
+              const refSlot: Slot = { id: ref.slotId, kind: "image", label: "مرجع" };
+              return (
+                <AttachmentSlot
+                  key={ref.slotId}
+                  slot={refSlot}
+                  value={ref}
+                  onChange={setAttachment}
+                />
+              );
+            })}
           </div>
         </div>
 
@@ -103,7 +115,11 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
         <div className="flex items-center justify-between gap-2">
           {/* dir=ltr pins the visual order to the design: settings (left) … + (right) */}
           <div dir="ltr" className="flex flex-wrap items-center gap-2">
-            <IconChip icon={SlidersHorizontal} label="إعدادات" />
+            <ToolbarSettings
+              settings={settings}
+              onChange={(patch) => setSettings((prev) => ({ ...prev, ...patch }))}
+              showCameraFixed={mode === "video"}
+            />
             {selects.map((select) => {
               if (select.control === "slider") {
                 return (
@@ -134,7 +150,16 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
                 />
               );
             })}
-            <IconChip icon={Plus} label="إضافة" />
+            <button
+              type="button"
+              aria-label="إضافة صورة مرجعية"
+              disabled={extraRefs.length >= MAX_EXTRA_REFS}
+              onClick={() => refInputRef.current?.click()}
+              className="flex h-8 items-center justify-center rounded-xl border border-line px-2 text-ink-faint transition-colors hover:border-line-hover disabled:opacity-40"
+            >
+              <Plus className="size-4" strokeWidth={1.75} />
+            </button>
+            <input ref={refInputRef} type="file" accept="image/*" hidden onChange={handleAddRef} />
           </div>
 
           <Button

@@ -10,6 +10,19 @@ import type {
   StudioMode,
 } from "@/lib/types";
 
+export interface AdvancedSettings {
+  negativePrompt: string;
+  /** Numeric string ("" = random). */
+  seed: string;
+  cameraFixed: boolean;
+}
+
+const DEFAULT_SETTINGS: AdvancedSettings = {
+  negativePrompt: "",
+  seed: "",
+  cameraFixed: false,
+};
+
 /** Default selected value for each toolbar selector in a mode. */
 function defaultSelections(mode: StudioMode): Record<string, string> {
   const out: Record<string, string> = {};
@@ -31,6 +44,7 @@ export function useComposer(initialMode: StudioMode = "video") {
     defaultSelections(initialMode),
   );
   const [attachments, setAttachments] = useState<Record<string, AttachmentValue>>({});
+  const [settings, setSettings] = useState<AdvancedSettings>(DEFAULT_SETTINGS);
 
   const slots = useMemo(() => attachmentsForMode(mode), [mode]);
   const selects = useMemo(() => toolbarSelectsForMode(mode), [mode]);
@@ -51,6 +65,15 @@ export function useComposer(initialMode: StudioMode = "video") {
       else delete next[slotId];
       return next;
     });
+  }, []);
+
+  /** Add an extra reference image (the ➕ button). */
+  const addReferenceImage = useCallback((previewUrl: string, fileName: string) => {
+    const id = `ref-${crypto.randomUUID().slice(0, 8)}`;
+    setAttachments((prev) => ({
+      ...prev,
+      [id]: { slotId: id, kind: "image", fileName, previewUrl },
+    }));
   }, []);
 
   const applyPreset = useCallback((preset: Preset) => {
@@ -86,17 +109,21 @@ export function useComposer(initialMode: StudioMode = "video") {
     setPrompt("");
     setSelections(defaultSelections(mode));
     setAttachments({});
+    setSettings(DEFAULT_SETTINGS);
   }, [mode]);
 
-  const buildRequest = useCallback(
-    (): GenerationRequest => ({
+  const buildRequest = useCallback((): GenerationRequest => {
+    const seedNum = Number.parseInt(settings.seed, 10);
+    return {
       mode,
       prompt: prompt.trim(),
       options: Object.values(selections),
       attachments: Object.values(attachments),
-    }),
-    [mode, prompt, selections, attachments],
-  );
+      negativePrompt: settings.negativePrompt.trim() || undefined,
+      seed: Number.isFinite(seedNum) ? seedNum : undefined,
+      cameraFixed: mode === "video" && settings.cameraFixed ? true : undefined,
+    };
+  }, [mode, prompt, selections, attachments, settings]);
 
   const canSubmit = prompt.trim().length > 0;
 
@@ -108,12 +135,15 @@ export function useComposer(initialMode: StudioMode = "video") {
     selects,
     selections,
     attachments,
+    settings,
     canSubmit,
     // actions
     setPrompt,
     changeMode,
     setSelection,
     setAttachment,
+    addReferenceImage,
+    setSettings,
     applyPreset,
     applyProduct,
     reset,

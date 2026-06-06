@@ -84,13 +84,13 @@ export const MOCK_PRODUCTS: MockProduct[] = [
 export function attachmentsForMode(mode: StudioMode): AttachmentSlot[] {
   if (mode === "video") {
     return [
-      { id: "product", kind: "product", label: "المنتج", required: true },
+      { id: "product", kind: "product", label: "المنتج" },
       { id: "character", kind: "character", label: "الشخصية" },
     ];
   }
   // Image mode: required product + an images slot.
   return [
-    { id: "product", kind: "product", label: "المنتج", required: true },
+    { id: "product", kind: "product", label: "المنتج" },
     { id: "image", kind: "image", label: "صور" },
   ];
 }

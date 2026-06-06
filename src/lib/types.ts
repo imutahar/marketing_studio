@@ -76,6 +76,10 @@ export interface GenerationRequest {
   attachments: AttachmentValue[];
   /** Owning project, if any. */
   projectId?: string;
+  /** Advanced settings. */
+  negativePrompt?: string;
+  seed?: number;
+  cameraFixed?: boolean;
 }
 
 /** A single generated asset returned by the backend. */
