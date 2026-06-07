@@ -7,7 +7,6 @@ import {
   Plus,
   Loader2,
   Sparkles,
-  Minus,
   Monitor,
   RectangleVertical,
   Film,
@@ -91,7 +90,7 @@ export function AdReferenceModal({ open, onClose, projectId, onGenerate }: AdRef
   const [script, setScript] = useState<AdScript | null>(null);
   const [resolution, setResolution] = useState("720p");
   const [aspectRatio, setAspectRatio] = useState("9:16");
-  const [variations, setVariations] = useState(1);
+  // NOTE(multi-output): no `variations` state — capped at 1 (see handleGenerate).
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -110,7 +109,6 @@ export function AdReferenceModal({ open, onClose, projectId, onGenerate }: AdRef
     setRefId(null);
     setProgress(0);
     setScript(null);
-    setVariations(1);
     setBusy(false);
     setError(null);
   }, [onClose]);
@@ -119,7 +117,25 @@ export function AdReferenceModal({ open, onClose, projectId, onGenerate }: AdRef
   useEffect(() => {
     if (step !== "analyzing" || !refId) return;
     let active = true;
+    // Holder so `fail` (defined before setInterval runs) can clear the timer.
+    const timer: { id?: ReturnType<typeof setInterval> } = {};
+    // Mirror the main generation flow's 12-minute deadline (src/lib/api/generation.ts).
+    // Without it the poll can spin forever if the backend never reaches ready/failed.
+    const deadline = Date.now() + 12 * 60 * 1000;
+    // Surface failures the same way a backend `failed` status does: show an error
+    // and send the user back to the intro step so they can retry.
+    const fail = (message: string) => {
+      if (!active) return;
+      active = false;
+      if (timer.id) clearInterval(timer.id);
+      setError(message);
+      setStep("intro");
+    };
     const tick = () => {
+      if (Date.now() > deadline) {
+        fail("انتهت مهلة تحليل الفيديو. حاول مرة أخرى.");
+        return;
+      }
       getAdReference(refId)
         .then((ref) => {
           if (!active) return;
@@ -134,13 +150,17 @@ export function AdReferenceModal({ open, onClose, projectId, onGenerate }: AdRef
             setStep("intro");
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          // Don't swallow network errors silently — surface them instead of
+          // spinning forever on a dead backend.
+          fail("تعذّر الوصول إلى الخادم أثناء التحليل. تأكد من تشغيل الخادم.");
+        });
     };
-    const interval = setInterval(tick, 800);
+    timer.id = setInterval(tick, 800);
     tick();
     return () => {
       active = false;
-      clearInterval(interval);
+      if (timer.id) clearInterval(timer.id);
     };
   }, [step, refId]);
 
@@ -174,7 +194,10 @@ export function AdReferenceModal({ open, onClose, projectId, onGenerate }: AdRef
       const { generationId } = await generateFromReference(refId, {
         resolution,
         aspectRatio,
-        variations,
+        // TODO(multi-output): capped at 1 until the UI can track/render multiple
+        // outputs. `variations` state is forced to 1; sending it literally here so
+        // the user can never trigger >1 even if the state plumbing changes.
+        variations: 1,
         projectId: projectId ?? undefined,
       });
       onGenerate(generationId);
@@ -331,14 +354,19 @@ export function AdReferenceModal({ open, onClose, projectId, onGenerate }: AdRef
             <div className="flex shrink-0 flex-wrap items-center gap-3 border-t border-line px-6 py-4">
               <ToolbarSelect config={RES_SELECT} value={resolution} onSelect={setResolution} />
               <ToolbarSelect config={RATIO_SELECT} value={aspectRatio} onSelect={setAspectRatio} />
-              <div className="flex h-8 items-center gap-2 rounded-xl border border-line px-2 text-xs font-medium text-ink">
-                <button type="button" aria-label="أقل" onClick={() => setVariations((v) => Math.max(1, v - 1))}>
-                  <Minus className="size-3.5 text-ink-faint" strokeWidth={2} />
-                </button>
-                <span>{variations}/4</span>
-                <button type="button" aria-label="أكثر" onClick={() => setVariations((v) => Math.min(4, v + 1))}>
-                  <Plus className="size-3.5 text-ink-faint" strokeWidth={2} />
-                </button>
+              {/*
+                TODO(multi-output): the variations selector (1–4) is temporarily
+                disabled. The backend can generate up to 4, but the UI only tracks
+                one generationId and renders outputs[0], so picking >1 just burns
+                quota. Re-enable once the multi-output gallery lands (track
+                generationIds[] + render all outputs). Until then `variations` is
+                forced to 1 and the request sends variations: 1.
+              */}
+              <div
+                className="flex h-8 items-center gap-2 rounded-xl border border-line px-2 text-xs font-medium text-ink-faint opacity-60"
+                title="إنشاء عدة نسخ قريبًا"
+              >
+                <span>نسخة واحدة</span>
               </div>
               {error && <p className="text-xs text-danger">{error}</p>}
               <Button

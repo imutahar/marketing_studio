@@ -10,6 +10,9 @@ import type { Generation } from "@/lib/types";
 function WorkCard({ gen, onView }: { gen: Generation; onView: () => void }) {
   const { videoRef, hoverHandlers } = useHoverVideo();
   const out = gen.outputs[0];
+  // Guard against an empty-outputs generation slipping through (e.g. a succeeded
+  // job with no outputs) so reading out.type can't crash the render.
+  if (!out) return null;
 
   return (
     <button
