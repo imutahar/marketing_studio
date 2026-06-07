@@ -22,7 +22,17 @@ import { getProject, type ProjectDetail, type ProjectInput } from "@/lib/api/pro
 
 export function StudioScreen() {
   const composer = useComposer("video");
-  const { status, result, error, start, track, show, reset: resetGeneration } = useGeneration();
+  const {
+    status,
+    result,
+    draft,
+    error,
+    start,
+    track,
+    approve,
+    show,
+    reset: resetGeneration,
+  } = useGeneration();
   const { usage, refresh: refreshUsage } = useUsage();
   const {
     projects,
@@ -163,9 +173,11 @@ export function StudioScreen() {
             ) : (
               <ResultPanel
                 status={status}
-                mode={result?.request.mode ?? composer.mode}
-                prompt={result?.request.prompt ?? composer.prompt}
+                mode={result?.request.mode ?? draft?.request.mode ?? composer.mode}
+                prompt={result?.request.prompt ?? draft?.request.prompt ?? composer.prompt}
                 result={result}
+                draft={draft}
+                onApprove={approve}
                 onReset={handleReset}
               />
             )}

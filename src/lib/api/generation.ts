@@ -30,6 +30,22 @@ export function trackGeneration(
   return pollUntilDone(id, signal);
 }
 
+/**
+ * Approve a draft preview and render it at full resolution.
+ * POSTs to the approve endpoint, then polls until the job resolves
+ * (succeeded/failed) — it will not return to draft_ready after approval.
+ */
+export async function approveGeneration(
+  id: string,
+  { signal }: { signal?: AbortSignal } = {},
+): Promise<Generation> {
+  await fetchJson<unknown>(`/api/generations/${id}/approve`, {
+    method: "POST",
+    signal,
+  });
+  return pollUntilDone(id, signal);
+}
+
 /** Map the composer request to the backend DTO. */
 function toPayload(request: GenerationRequest) {
   return {
@@ -40,6 +56,7 @@ function toPayload(request: GenerationRequest) {
     seed: request.seed,
     cameraFixed: request.cameraFixed,
     generateAudio: request.generateAudio,
+    draft: request.draft,
     options: request.options,
     // previewUrl is a base64 data URI of the (downscaled) uploaded image, which
     // the provider can consume directly as the image-to-image/video reference.
@@ -61,7 +78,8 @@ async function pollUntilDone(
     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
     const job = await fetchJson<Generation>(`/api/generations/${id}`, { signal });
-    if (job.status === "succeeded") return job;
+    // Terminal stops: succeeded, draft_ready (resolve), failed (throw).
+    if (job.status === "succeeded" || job.status === "draft_ready") return job;
     if (job.status === "failed") {
       throw new Error(job.error ?? "فشل إنشاء الإعلان");
     }

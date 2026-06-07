@@ -53,7 +53,7 @@ export interface AttachmentSlot {
 }
 
 /** Generation lifecycle for the in-place result experience. */
-export type GenerationStatus = "idle" | "generating" | "result";
+export type GenerationStatus = "idle" | "generating" | "draft" | "result";
 
 /** A value attached to a composer slot (a locally-uploaded image). */
 export interface AttachmentValue {
@@ -82,6 +82,8 @@ export interface GenerationRequest {
   cameraFixed?: boolean;
   /** Video only: generate synced audio (voice/SFX/music). */
   generateAudio?: boolean;
+  /** Video only: generate a cheap 480p draft preview before the full render. */
+  draft?: boolean;
 }
 
 /** A single generated asset returned by the backend. */
@@ -93,12 +95,16 @@ export interface GenerationOutput {
 /** A generation job as returned by the backend. */
 export interface Generation {
   id: string;
-  status: "queued" | "processing" | "succeeded" | "failed";
+  status: "queued" | "processing" | "succeeded" | "failed" | "draft_ready";
   request: GenerationRequest;
   outputs: GenerationOutput[];
   capability?: string;
   provider?: string;
   error?: string;
+  /** Draft mode: 480p preview video URL, present when status is "draft_ready". */
+  draftPreviewUrl?: string;
+  /** Draft mode: provider task id for the draft preview. */
+  draftTaskId?: string;
   createdAt: string;
   updatedAt?: string;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { attachmentsForMode } from "@/lib/mock";
 import { toolbarSelectsForMode } from "@/lib/toolbar";
 import type {
@@ -17,6 +17,8 @@ export interface AdvancedSettings {
   cameraFixed: boolean;
   /** Video only: generate synced audio (voice/SFX/music). Default off. */
   generateAudio: boolean;
+  /** Video only: generate a cheap 480p draft preview first. Remembered preference. */
+  draft: boolean;
 }
 
 const DEFAULT_SETTINGS: AdvancedSettings = {
@@ -24,7 +26,21 @@ const DEFAULT_SETTINGS: AdvancedSettings = {
   seed: "",
   cameraFixed: false,
   generateAudio: false,
+  draft: false,
 };
+
+/** localStorage key for the remembered "draft mode" preference. */
+const DRAFT_PREF_KEY = "ms.draftMode";
+
+/** Read the persisted draft-mode preference (SSR-safe). */
+function readDraftPref(): boolean {
+  if (typeof window === "undefined") return DEFAULT_SETTINGS.draft;
+  try {
+    return window.localStorage.getItem(DRAFT_PREF_KEY) === "1";
+  } catch {
+    return DEFAULT_SETTINGS.draft;
+  }
+}
 
 /** Default selected value for each toolbar selector in a mode. */
 function defaultSelections(mode: StudioMode): Record<string, string> {
@@ -47,7 +63,20 @@ export function useComposer(initialMode: StudioMode = "video") {
     defaultSelections(initialMode),
   );
   const [attachments, setAttachments] = useState<Record<string, AttachmentValue>>({});
-  const [settings, setSettings] = useState<AdvancedSettings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<AdvancedSettings>(() => ({
+    ...DEFAULT_SETTINGS,
+    draft: readDraftPref(),
+  }));
+
+  // Persist the draft-mode preference whenever it changes (SSR-safe).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(DRAFT_PREF_KEY, settings.draft ? "1" : "0");
+    } catch {
+      // ignore quota / privacy-mode failures
+    }
+  }, [settings.draft]);
 
   const slots = useMemo(() => attachmentsForMode(mode), [mode]);
   const selects = useMemo(() => toolbarSelectsForMode(mode), [mode]);
@@ -112,7 +141,8 @@ export function useComposer(initialMode: StudioMode = "video") {
     setPrompt("");
     setSelections(defaultSelections(mode));
     setAttachments({});
-    setSettings(DEFAULT_SETTINGS);
+    // Keep the remembered draft-mode preference across resets.
+    setSettings((prev) => ({ ...DEFAULT_SETTINGS, draft: prev.draft }));
   }, [mode]);
 
   const buildRequest = useCallback((): GenerationRequest => {
@@ -126,6 +156,7 @@ export function useComposer(initialMode: StudioMode = "video") {
       seed: Number.isFinite(seedNum) ? seedNum : undefined,
       cameraFixed: mode === "video" && settings.cameraFixed ? true : undefined,
       generateAudio: mode === "video" && settings.generateAudio ? true : undefined,
+      draft: mode === "video" && settings.draft ? true : undefined,
     };
   }, [mode, prompt, selections, attachments, settings]);
 
