@@ -15,12 +15,15 @@ export interface AdvancedSettings {
   /** Numeric string ("" = random). */
   seed: string;
   cameraFixed: boolean;
+  /** Video only: generate synced audio (voice/SFX/music). Default off. */
+  generateAudio: boolean;
 }
 
 const DEFAULT_SETTINGS: AdvancedSettings = {
   negativePrompt: "",
   seed: "",
   cameraFixed: false,
+  generateAudio: false,
 };
 
 /** Default selected value for each toolbar selector in a mode. */
@@ -122,6 +125,7 @@ export function useComposer(initialMode: StudioMode = "video") {
       negativePrompt: settings.negativePrompt.trim() || undefined,
       seed: Number.isFinite(seedNum) ? seedNum : undefined,
       cameraFixed: mode === "video" && settings.cameraFixed ? true : undefined,
+      generateAudio: mode === "video" && settings.generateAudio ? true : undefined,
     };
   }, [mode, prompt, selections, attachments, settings]);
 

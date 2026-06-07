@@ -39,6 +39,7 @@ function toPayload(request: GenerationRequest) {
     negativePrompt: request.negativePrompt,
     seed: request.seed,
     cameraFixed: request.cameraFixed,
+    generateAudio: request.generateAudio,
     options: request.options,
     // previewUrl is a base64 data URI of the (downscaled) uploaded image, which
     // the provider can consume directly as the image-to-image/video reference.
