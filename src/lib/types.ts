@@ -80,6 +80,8 @@ export interface GenerationRequest {
   negativePrompt?: string;
   seed?: number;
   cameraFixed?: boolean;
+  /** Video only: generate synced audio (voice/SFX/music). */
+  generateAudio?: boolean;
 }
 
 /** A single generated asset returned by the backend. */

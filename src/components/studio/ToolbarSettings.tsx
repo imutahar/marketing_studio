@@ -53,6 +53,18 @@ export function ToolbarSettings({ settings, onChange, showCameraFixed }: Toolbar
             </label>
           )}
 
+          {showCameraFixed && (
+            <label className="mt-3 flex items-center justify-between text-xs text-ink">
+              توليد الصوت (تعليق وموسيقى)
+              <input
+                type="checkbox"
+                checked={settings.generateAudio}
+                onChange={(e) => onChange({ generateAudio: e.target.checked })}
+                className="size-4 accent-[var(--color-primary)]"
+              />
+            </label>
+          )}
+
           <label className="mt-3 block text-[11px] text-ink-faint">
             البذرة (seed) — اختياري
           </label>
