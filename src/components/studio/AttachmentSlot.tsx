@@ -28,6 +28,7 @@ interface AttachmentSlotProps {
 export function AttachmentSlot({ slot, value, onChange, onPick }: AttachmentSlotProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const Icon = KIND_ICON[slot.kind];
   const filled = Boolean(value?.previewUrl);
 
@@ -35,6 +36,7 @@ export function AttachmentSlot({ slot, value, onChange, onPick }: AttachmentSlot
     const file = e.target.files?.[0];
     if (!file) return;
     setLoading(true);
+    setError(false);
     try {
       const dataUrl = await fileToDownscaledDataUrl(file);
       onChange(slot.id, {
@@ -43,8 +45,13 @@ export function AttachmentSlot({ slot, value, onChange, onPick }: AttachmentSlot
         fileName: file.name,
         previewUrl: dataUrl,
       });
+    } catch {
+      // Corrupt / unsupported file — surface a brief inline hint and let the user retry.
+      setError(true);
     } finally {
       setLoading(false);
+      // Allow re-selecting the same file after a failure.
+      e.target.value = "";
     }
   }
 
@@ -91,6 +98,13 @@ export function AttachmentSlot({ slot, value, onChange, onPick }: AttachmentSlot
         >
           <X className="size-3" strokeWidth={2.5} />
         </button>
+      )}
+
+      {/* Inline decode-failure hint */}
+      {error && (
+        <p role="alert" className="absolute inset-x-0 top-full mt-1 text-center text-[10px] leading-tight text-danger">
+          تعذّر قراءة الصورة
+        </p>
       )}
 
       <input ref={inputRef} type="file" accept="image/*" hidden onChange={handleFile} />

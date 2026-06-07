@@ -78,7 +78,7 @@ const VIDEO_SELECTS: ToolbarSelectConfig[] = [
 const IMAGE_SELECTS: ToolbarSelectConfig[] = [
   { id: "language", control: "dropdown", icon: Type, placeholder: "نص عربي", options: ["نص عربي", "نص إنجليزي"], defaultValue: "نص عربي" },
   { id: "format", control: "dropdown", icon: Crop, placeholder: "صورة انستجرام", options: ["صورة انستجرام", "ستوري انستجرام", "منشور فيسبوك", "بنر إعلاني"], defaultValue: "صورة انستجرام" },
-  { id: "imageType", control: "dropdown", icon: ImageIcon, placeholder: "نوع الصورة", options: ["تلقائي", "واقعي", "ثلاثي الأبعاد", "رسومي"] },
+  { id: "imageType", control: "dropdown", icon: ImageIcon, placeholder: "نوع الصورة", options: ["تلقائي", "واقعي", "ثلاثي الأبعاد", "رسومي"], defaultValue: "تلقائي" },
 ];
 
 /** Toolbar selectors differ by mode (matches the two Figma frames). */

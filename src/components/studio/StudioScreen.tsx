@@ -114,7 +114,9 @@ export function StudioScreen() {
   }
 
   function handleSubmit() {
-    if (!composer.canSubmit || status === "generating") return;
+    // Block while generating OR while a draft preview is pending approval —
+    // submitting again would silently discard the draft and start a new paid job.
+    if (!composer.canSubmit || status === "generating" || status === "draft") return;
     start({ ...composer.buildRequest(), projectId: activeId ?? undefined });
   }
 
@@ -152,7 +154,7 @@ export function StudioScreen() {
           <Composer
             composer={composer}
             onSubmit={handleSubmit}
-            isGenerating={status === "generating"}
+            isBusy={status === "generating" || status === "draft"}
           />
 
           {error && (
