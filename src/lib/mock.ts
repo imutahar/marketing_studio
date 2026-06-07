@@ -6,6 +6,7 @@ import type {
   StudioMode,
   ToolItem,
 } from "./types";
+import { PREVIEW_VIDEOS } from "./media";
 
 /** Monthly usage quota (the 25% wheel in the sidebar). */
 export const MONTHLY_USAGE_PERCENT = 25;
@@ -18,6 +19,7 @@ export const PRESETS: Preset[] = [
     mode: "video",
     promptScaffold: "إعلان تلفزيوني سينمائي يبرز المنتج بإضاءة احترافية ولقطات واسعة.",
     gradient: "from-amber-900 via-stone-800 to-neutral-900",
+    video: PREVIEW_VIDEOS.tv,
   },
   {
     id: "fast-motion",
@@ -25,6 +27,7 @@ export const PRESETS: Preset[] = [
     mode: "video",
     promptScaffold: "لقطة بحركة كاميرا سريعة (crash zoom) حول المنتج بخلفية حيوية.",
     gradient: "from-lime-400 via-green-500 to-emerald-700",
+    video: PREVIEW_VIDEOS.fast,
   },
   {
     id: "unboxing",
@@ -32,6 +35,7 @@ export const PRESETS: Preset[] = [
     mode: "video",
     promptScaffold: "مشهد فتح علبة المنتج بأيدٍ أنيقة وإضاءة ناعمة وتركيز على التفاصيل.",
     gradient: "from-rose-500 via-red-500 to-rose-700",
+    video: PREVIEW_VIDEOS.unboxing,
   },
   {
     id: "influencers",
@@ -39,6 +43,7 @@ export const PRESETS: Preset[] = [
     mode: "video",
     promptScaffold: "مؤثر يستعرض المنتج بأسلوب UGC طبيعي أمام الكاميرا مع تعليق صوتي.",
     gradient: "from-slate-300 via-slate-400 to-slate-600",
+    video: PREVIEW_VIDEOS.influencer,
   },
   {
     id: "explainer",
@@ -46,21 +51,22 @@ export const PRESETS: Preset[] = [
     mode: "video",
     promptScaffold: "فيديو توضيحي يشرح مميزات المنتج خطوة بخطوة بأسلوب بسيط وجذاب.",
     gradient: "from-teal-300 via-cyan-400 to-sky-500",
+    video: PREVIEW_VIDEOS.explainer,
   },
 ];
 
 /** Saved projects shown in the sidebar (المشاريع). */
 export const PROJECTS: Project[] = [
-  { id: "shower-gel", name: "شاور جل" },
-  { id: "shampoo", name: "شامبو" },
-  { id: "travel-bag", name: "شنطة سفر" },
+  { id: "shower-gel", name: "شاور جل", color: "text-emerald-500" },
+  { id: "shampoo", name: "شامبو", color: "text-amber-500" },
+  { id: "travel-bag", name: "شنطة سفر", color: "text-sky-500" },
 ];
 
-/** Tools shown in the sidebar (أدوات). */
+/** Tools shown in the sidebar (أدوات). Ordered: URL→ad, reference ad, MCP. */
 export const TOOLS: ToolItem[] = [
   { id: "url-to-ad", label: "من رابط إلى إعلان", icon: "link" },
-  { id: "mcp", label: "إتصال MCP", icon: "plug" },
-  { id: "reference-ad", label: "إعلان مرجعي", icon: "sparkles", isNew: true },
+  { id: "reference-ad", label: "إعلان مرجعي", icon: "sparkles", badge: "new" },
+  { id: "mcp", label: "إتصال MCP", icon: "plug", badge: "soon", disabled: true },
 ];
 
 /** Sample store products for the (mocked) product picker. */
@@ -71,26 +77,20 @@ export const MOCK_PRODUCTS: MockProduct[] = [
   { id: "p4", name: "عطر فاخر", price: "٢٨٠ ر.س", gradient: "from-rose-200 to-pink-300" },
 ];
 
-/** Attachment slots differ by mode (matches the two Figma frames). */
+/**
+ * Attachment slots differ by mode (matches the two Figma frames). Product is
+ * required and sits first so it renders on the right (nearest the prompt).
+ */
 export function attachmentsForMode(mode: StudioMode): AttachmentSlot[] {
   if (mode === "video") {
     return [
+      { id: "product", kind: "product", label: "المنتج" },
       { id: "character", kind: "character", label: "الشخصية" },
-      { id: "product", kind: "product", label: "المنتج", required: true },
     ];
   }
-  // Image mode: required product + a few image slots.
+  // Image mode: required product + an images slot.
   return [
-    { id: "product", kind: "product", label: "المنتج", required: true },
-    { id: "img-1", kind: "image", label: "صورة" },
-    { id: "img-2", kind: "image", label: "صورة" },
+    { id: "product", kind: "product", label: "المنتج" },
+    { id: "image", kind: "image", label: "صور" },
   ];
-}
-
-/** Toolbar option chips differ by mode (matches the two Figma frames). */
-export function toolbarOptionsForMode(mode: StudioMode): string[] {
-  if (mode === "video") {
-    return ["12s", "720p", "9:16", "مراجعة منتج"];
-  }
-  return ["منصة إجتماعية", "صورة انستجرام", "نص عربي"];
 }

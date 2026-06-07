@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { attachmentsForMode, toolbarOptionsForMode } from "@/lib/mock";
+import { attachmentsForMode } from "@/lib/mock";
+import { toolbarSelectsForMode } from "@/lib/toolbar";
 import type {
   AttachmentValue,
   GenerationRequest,
@@ -9,29 +10,52 @@ import type {
   StudioMode,
 } from "@/lib/types";
 
+export interface AdvancedSettings {
+  negativePrompt: string;
+  /** Numeric string ("" = random). */
+  seed: string;
+  cameraFixed: boolean;
+}
+
+const DEFAULT_SETTINGS: AdvancedSettings = {
+  negativePrompt: "",
+  seed: "",
+  cameraFixed: false,
+};
+
+/** Default selected value for each toolbar selector in a mode. */
+function defaultSelections(mode: StudioMode): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const select of toolbarSelectsForMode(mode)) {
+    if (select.defaultValue) out[select.id] = select.defaultValue;
+  }
+  return out;
+}
+
 /**
- * Single source of truth for the composer: mode, prompt, selected toolbar
- * options, and attachments. `buildRequest()` produces the exact payload a
- * generation backend will consume, so the data shape lives in one place.
+ * Single source of truth for the composer: mode, prompt, toolbar selector
+ * values, and attachments. `buildRequest()` produces the exact payload a
+ * generation backend will consume.
  */
 export function useComposer(initialMode: StudioMode = "video") {
   const [mode, setMode] = useState<StudioMode>(initialMode);
   const [prompt, setPrompt] = useState("");
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [selections, setSelections] = useState<Record<string, string>>(() =>
+    defaultSelections(initialMode),
+  );
   const [attachments, setAttachments] = useState<Record<string, AttachmentValue>>({});
+  const [settings, setSettings] = useState<AdvancedSettings>(DEFAULT_SETTINGS);
 
   const slots = useMemo(() => attachmentsForMode(mode), [mode]);
-  const options = useMemo(() => toolbarOptionsForMode(mode), [mode]);
+  const selects = useMemo(() => toolbarSelectsForMode(mode), [mode]);
 
   const changeMode = useCallback((next: StudioMode) => {
     setMode(next);
-    setSelectedOptions([]); // toolbar options differ per mode
+    setSelections(defaultSelections(next)); // selectors differ per mode
   }, []);
 
-  const toggleOption = useCallback((option: string) => {
-    setSelectedOptions((prev) =>
-      prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option],
-    );
+  const setSelection = useCallback((id: string, value: string) => {
+    setSelections((prev) => ({ ...prev, [id]: value }));
   }, []);
 
   const setAttachment = useCallback((slotId: string, value: AttachmentValue | null) => {
@@ -43,27 +67,63 @@ export function useComposer(initialMode: StudioMode = "video") {
     });
   }, []);
 
+  /** Add an extra reference image (the ➕ button). */
+  const addReferenceImage = useCallback((previewUrl: string, fileName: string) => {
+    const id = `ref-${crypto.randomUUID().slice(0, 8)}`;
+    setAttachments((prev) => ({
+      ...prev,
+      [id]: { slotId: id, kind: "image", fileName, previewUrl },
+    }));
+  }, []);
+
   const applyPreset = useCallback((preset: Preset) => {
     setMode(preset.mode);
     setPrompt(preset.promptScaffold);
-    setSelectedOptions([]);
+    setSelections(defaultSelections(preset.mode));
   }, []);
+
+  /** Seed the composer from an extracted product (Url-to-Ad flow). */
+  const applyProduct = useCallback(
+    (product: {
+      prompt: string;
+      imageUrl: string;
+      fileName?: string;
+      selections?: Record<string, string>;
+    }) => {
+      setMode("video");
+      setSelections({ ...defaultSelections("video"), ...(product.selections ?? {}) });
+      setPrompt(product.prompt);
+      setAttachments({
+        product: {
+          slotId: "product",
+          kind: "product",
+          fileName: product.fileName ?? "product",
+          previewUrl: product.imageUrl,
+        },
+      });
+    },
+    [],
+  );
 
   const reset = useCallback(() => {
     setPrompt("");
-    setSelectedOptions([]);
+    setSelections(defaultSelections(mode));
     setAttachments({});
-  }, []);
+    setSettings(DEFAULT_SETTINGS);
+  }, [mode]);
 
-  const buildRequest = useCallback(
-    (): GenerationRequest => ({
+  const buildRequest = useCallback((): GenerationRequest => {
+    const seedNum = Number.parseInt(settings.seed, 10);
+    return {
       mode,
       prompt: prompt.trim(),
-      options: selectedOptions,
+      options: Object.values(selections),
       attachments: Object.values(attachments),
-    }),
-    [mode, prompt, selectedOptions, attachments],
-  );
+      negativePrompt: settings.negativePrompt.trim() || undefined,
+      seed: Number.isFinite(seedNum) ? seedNum : undefined,
+      cameraFixed: mode === "video" && settings.cameraFixed ? true : undefined,
+    };
+  }, [mode, prompt, selections, attachments, settings]);
 
   const canSubmit = prompt.trim().length > 0;
 
@@ -72,16 +132,20 @@ export function useComposer(initialMode: StudioMode = "video") {
     mode,
     prompt,
     slots,
-    options,
-    selectedOptions,
+    selects,
+    selections,
     attachments,
+    settings,
     canSubmit,
     // actions
     setPrompt,
     changeMode,
-    toggleOption,
+    setSelection,
     setAttachment,
+    addReferenceImage,
+    setSettings,
     applyPreset,
+    applyProduct,
     reset,
     buildRequest,
   };

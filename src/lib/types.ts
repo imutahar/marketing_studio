@@ -14,20 +14,26 @@ export interface Preset {
   promptScaffold: string;
   /** Tailwind gradient classes used for the placeholder thumbnail. */
   gradient: string;
+  /** Optional preview video that autoplays in the card. */
+  video?: string;
 }
 
 /** A saved project in the sidebar. */
 export interface Project {
   id: string;
   name: string;
+  /** Tailwind text-color class used to tint the project's folder icon. */
+  color: string;
 }
 
-/** A tool entry in the sidebar (URL→ad, MCP connection, reference ad…). */
+/** A tool entry in the sidebar (URL→ad, reference ad, MCP connection). */
 export interface ToolItem {
   id: string;
   label: string;
   icon: "link" | "plug" | "sparkles";
-  isNew?: boolean;
+  /** Optional status badge: new feature, or coming soon (disabled). */
+  badge?: "new" | "soon";
+  disabled?: boolean;
 }
 
 /** A mock store product used by the (future) product picker. */
@@ -49,11 +55,12 @@ export interface AttachmentSlot {
 /** Generation lifecycle for the in-place result experience. */
 export type GenerationStatus = "idle" | "generating" | "result";
 
-/** A value attached to a composer slot (MVP: a locally-uploaded image). */
+/** A value attached to a composer slot (a locally-uploaded image). */
 export interface AttachmentValue {
   slotId: string;
   kind: AttachmentSlot["kind"];
   fileName: string;
+  /** Base64 data URI of the downscaled image — used for preview and as input. */
   previewUrl: string;
 }
 
@@ -67,12 +74,29 @@ export interface GenerationRequest {
   /** Selected toolbar option labels (duration, ratio, platform, …). */
   options: string[];
   attachments: AttachmentValue[];
+  /** Owning project, if any. */
+  projectId?: string;
+  /** Advanced settings. */
+  negativePrompt?: string;
+  seed?: number;
+  cameraFixed?: boolean;
 }
 
-/** Result of a generation job (mocked for now). */
+/** A single generated asset returned by the backend. */
+export interface GenerationOutput {
+  type: StudioMode;
+  url: string;
+}
+
+/** A generation job as returned by the backend. */
 export interface Generation {
   id: string;
+  status: "queued" | "processing" | "succeeded" | "failed";
   request: GenerationRequest;
-  output: { type: StudioMode };
-  createdAt: number;
+  outputs: GenerationOutput[];
+  capability?: string;
+  provider?: string;
+  error?: string;
+  createdAt: string;
+  updatedAt?: string;
 }
