@@ -63,7 +63,7 @@ const VIDEO_TYPE_CARDS: SheetCard[] = [
 const VIDEO_SELECTS: ToolbarSelectConfig[] = [
   { id: "duration", control: "slider", icon: Clock, placeholder: "المدة", min: 6, max: 12, step: 1, unit: "ث", defaultValue: "12 ث" },
   { id: "resolution", control: "dropdown", icon: Monitor, placeholder: "الدقة", options: ["480p", "720p", "1080p"], defaultValue: "1080p" },
-  { id: "ratio", control: "dropdown", icon: RectangleVertical, placeholder: "الأبعاد", options: ["9:16", "16:9", "1:1", "4:3", "3:4", "2:1"], defaultValue: "9:16" },
+  { id: "ratio", control: "dropdown", icon: RectangleVertical, placeholder: "الأبعاد", options: ["9:16", "16:9", "1:1", "4:3", "3:4", "21:9"], defaultValue: "9:16" },
   {
     id: "videoType",
     control: "sheet",
