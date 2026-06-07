@@ -18,12 +18,13 @@ import { MediaLibraryModal } from "./MediaLibraryModal";
 interface ComposerProps {
   composer: ComposerController;
   onSubmit: () => void;
-  isGenerating: boolean;
+  /** Submit is blocked while a job is in flight OR a draft preview awaits approval. */
+  isBusy: boolean;
 }
 
 const MAX_EXTRA_REFS = 3;
 
-export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
+export function Composer({ composer, onSubmit, isBusy }: ComposerProps) {
   const {
     mode,
     prompt,
@@ -163,7 +164,7 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
             variant="mint"
             size="icon"
             onClick={onSubmit}
-            disabled={isGenerating || !canSubmit}
+            disabled={isBusy || !canSubmit}
             aria-label="إنشاء الإعلان"
           >
             <ArrowUp className="size-4" strokeWidth={2.5} />

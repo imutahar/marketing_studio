@@ -84,6 +84,18 @@ export function useComposer(initialMode: StudioMode = "video") {
   const changeMode = useCallback((next: StudioMode) => {
     setMode(next);
     setSelections(defaultSelections(next)); // selectors differ per mode
+    // Slot sets differ per mode, so drop fixed-slot attachments that don't
+    // belong to the next mode (e.g. a "character" carried over into image mode
+    // would be invisible, un-removable, and shipped as a wrong-kind payload).
+    // Keep extra references (ref-*) and any slot valid for the next mode.
+    const validSlotIds = new Set(attachmentsForMode(next).map((s) => s.id));
+    setAttachments((prev) => {
+      const next: Record<string, AttachmentValue> = {};
+      for (const [id, value] of Object.entries(prev)) {
+        if (id.startsWith("ref-") || validSlotIds.has(id)) next[id] = value;
+      }
+      return next;
+    });
   }, []);
 
   const setSelection = useCallback((id: string, value: string) => {
