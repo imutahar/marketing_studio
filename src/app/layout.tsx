@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
+import { DIR, LOCALE } from "@/lib/locale";
 import "./globals.css";
 
 // Ping AR + LT (the Figma typeface) is proprietary; IBM Plex Sans Arabic is a
@@ -23,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className={`${arabic.variable} h-full`}>
+    <html lang={LOCALE} dir={DIR} className={`${arabic.variable} h-full`}>
       <body className="min-h-full flex flex-col bg-card text-ink">
         {children}
       </body>

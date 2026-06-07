@@ -1,3 +1,5 @@
+import { formatPercent } from "@/lib/locale";
+
 interface UsageWheelProps {
   percent: number;
   size?: number;
@@ -33,7 +35,7 @@ export function UsageWheel({ percent, size = 40 }: UsageWheelProps) {
         />
       </svg>
       <span className="absolute inset-0 grid place-items-center text-[10px] font-bold text-ink-strong">
-        {percent}%
+        {formatPercent(percent)}
       </span>
     </div>
   );

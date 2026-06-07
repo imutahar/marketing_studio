@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { X } from "lucide-react";
+import { DIR } from "@/lib/locale";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 interface ModalProps {
@@ -39,7 +40,7 @@ export function Modal({
     >
       <div
         ref={ref}
-        dir="rtl"
+        dir={DIR}
         role="dialog"
         aria-modal="true"
         aria-label={ariaLabel}
@@ -48,7 +49,7 @@ export function Modal({
       >
         {(title || subtitle) && (
           <div className="flex shrink-0 items-start justify-between gap-4 px-6 py-5">
-            <div className="text-right">
+            <div className="text-start">
               {title && <h3 className="text-md font-bold text-ink">{title}</h3>}
               {subtitle && (
                 <p className="mt-1.5 text-xs text-ink-muted">{subtitle}</p>

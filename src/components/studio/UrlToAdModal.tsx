@@ -143,6 +143,7 @@ export function UrlToAdModal({ open, onClose, onGenerate }: UrlToAdModalProps) {
                 <Link2 className="size-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
                 <input
                   type="url"
+                  // Always LTR regardless of locale: URLs read left-to-right.
                   dir="ltr"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}

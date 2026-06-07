@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { DIR } from "@/lib/locale";
 import { useHoverVideo } from "@/hooks/useHoverVideo";
 import type { SheetCard, SheetSelect } from "@/lib/toolbar";
 
@@ -61,7 +62,7 @@ export function ToolbarSheet({ config, value, onSelect }: ToolbarSheetProps) {
     <>
       <button
         type="button"
-        dir="rtl"
+        dir={DIR}
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
         className="flex h-8 items-center gap-1 rounded-xl border border-line px-2 text-xs font-medium transition-colors hover:border-line-hover"

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { formatPercent } from "@/lib/locale";
 import type { DropdownSelect } from "@/lib/toolbar";
 import { PREVIEW_VIDEOS } from "@/lib/media";
 import {
@@ -72,7 +73,7 @@ function MiniSlot({
       ) : (
         <Plus className="absolute left-1/2 top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 text-ink-faint" strokeWidth={2} />
       )}
-      <span className="absolute bottom-1.5 right-2 text-[10px] font-bold text-ink">
+      <span className="absolute bottom-1.5 end-2 text-[10px] font-bold text-ink">
         {label}
       </span>
     </button>
@@ -293,7 +294,7 @@ export function AdReferenceModal({ open, onClose, projectId, onGenerate }: AdRef
           <div className="flex flex-col items-center gap-3 px-6 py-16">
             <Loader2 className="size-8 animate-spin text-primary" />
             <h2 className="text-lg font-bold text-ink-strong">جاري تحليل الفيديو</h2>
-            <p className="text-sm font-bold text-primary">{progress}%</p>
+            <p className="text-sm font-bold text-primary">{formatPercent(progress)}</p>
             <div className="mt-2 h-1.5 w-64 overflow-hidden rounded-full bg-neutrals">
               <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
             </div>

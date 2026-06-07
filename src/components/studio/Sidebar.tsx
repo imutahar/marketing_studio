@@ -12,6 +12,7 @@ import {
   LayoutGrid,
 } from "lucide-react";
 import { MONTHLY_USAGE_PERCENT, TOOLS } from "@/lib/mock";
+import { formatNumber } from "@/lib/locale";
 import type { UsageSummary } from "@/lib/api/usage";
 import type { Project } from "@/lib/api/projects";
 import type { ToolItem } from "@/lib/types";
@@ -186,9 +187,9 @@ export function Sidebar({
           <p className="text-[11px] text-ink-faint">
             متبقٍ{" "}
             <span className="font-bold text-ink">
-              {usage.remainingTokens.toLocaleString("en-US")}
+              {formatNumber(usage.remainingTokens)}
             </span>{" "}
-            من {usage.totalTokens.toLocaleString("en-US")} رمز
+            من {formatNumber(usage.totalTokens)} رمز
           </p>
         )}
       </div>
