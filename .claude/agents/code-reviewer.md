@@ -14,7 +14,7 @@ Steps:
 2. Review for, in priority order:
    - Correctness bugs and broken logic.
    - Async job handling: missing loading, error, or empty states; assuming synchronous responses.
-   - RTL/Arabic issues: hardcoded left/right, direction-unaware layout.
+   - RTL/Arabic + i18n readiness (see AGENTS.md): FLAG any physical-direction utility (`left`/`right`, `ml-`/`mr-`, `pl-`/`pr-`, `text-left`/`text-right`, `border-l`/`border-r`) — must be the logical equivalent (`start`/`end`, `ms-`/`me-`, `ps-`/`pe-`, `text-start`/`text-end`, `border-s`/`border-e`). Centering pairs like `left-1/2 -translate-x-1/2` are fine. Also flag: a hardcoded `dir="rtl"`/`lang="ar"` instead of a locale variable; user-facing strings buried deep in nested JSX rather than collected/extractable; hand-rolled number/date formatting that should use `Intl.*`. Do NOT ask for next-intl/locale routing/translations — those are intentionally deferred.
    - Next.js 16 correctness — flag anything that looks like an older-API assumption (cross-check `node_modules/next/dist/docs/` if unsure).
    - Convention/reuse: duplicated logic, ignored existing components/utils, naming drift.
 3. Keep findings high-signal. For each: file:line, what's wrong, why it matters, and a concrete fix.
