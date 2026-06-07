@@ -65,6 +65,23 @@ export function ToolbarSettings({ settings, onChange, showCameraFixed }: Toolbar
             </label>
           )}
 
+          {showCameraFixed && (
+            <div className="mt-3">
+              <label className="flex items-center justify-between text-xs text-ink">
+                معاينة سريعة (مسودة 480p)
+                <input
+                  type="checkbox"
+                  checked={settings.draft}
+                  onChange={(e) => onChange({ draft: e.target.checked })}
+                  className="size-4 accent-[var(--color-primary)]"
+                />
+              </label>
+              <p className="mt-0.5 text-[10px] text-ink-faint">
+                أنشئ معاينة رخيصة قبل الجودة الكاملة
+              </p>
+            </div>
+          )}
+
           <label className="mt-3 block text-[11px] text-ink-faint">
             البذرة (seed) — اختياري
           </label>
