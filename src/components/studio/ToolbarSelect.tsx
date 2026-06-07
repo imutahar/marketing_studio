@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+import { DIR } from "@/lib/locale";
 import { usePopover } from "@/hooks/usePopover";
 import type { DropdownSelect } from "@/lib/toolbar";
 
@@ -19,7 +20,7 @@ export function ToolbarSelect({ config, value, onSelect }: ToolbarSelectProps) {
   const Icon = config.icon;
 
   return (
-    <div className="relative" dir="rtl" ref={ref}>
+    <div className="relative" dir={DIR} ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

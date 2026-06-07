@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+import { DIR } from "@/lib/locale";
 import { usePopover } from "@/hooks/usePopover";
 import type { SliderSelect } from "@/lib/toolbar";
 
@@ -17,7 +18,7 @@ export function ToolbarSlider({ config, value, onChange }: ToolbarSliderProps) {
   const current = Number.parseInt(value ?? "", 10) || config.max;
 
   return (
-    <div className="relative" dir="rtl" ref={ref}>
+    <div className="relative" dir={DIR} ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

@@ -1,6 +1,7 @@
 "use client";
 
 import { SlidersHorizontal } from "lucide-react";
+import { DIR } from "@/lib/locale";
 import { usePopover } from "@/hooks/usePopover";
 import type { AdvancedSettings } from "@/hooks/useComposer";
 
@@ -16,7 +17,7 @@ export function ToolbarSettings({ settings, onChange, showCameraFixed }: Toolbar
   const { open, setOpen, ref } = usePopover();
 
   return (
-    <div className="relative" dir="rtl" ref={ref}>
+    <div className="relative" dir={DIR} ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

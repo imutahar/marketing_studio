@@ -110,7 +110,8 @@ export function Composer({ composer, onSubmit, isGenerating }: ComposerProps) {
 
         {/* Bottom: toolbar (start/right) + send (end/left) */}
         <div className="flex items-center justify-between gap-2">
-          {/* dir=ltr pins the visual order to the design: settings (left) … + (right) */}
+          {/* dir=ltr pins the visual order to the design: settings (left) … + (right).
+              Stays LTR by design regardless of locale — do not thread through DIR. */}
           <div dir="ltr" className="flex flex-wrap items-center gap-2">
             <ToolbarSettings
               settings={settings}
