@@ -1,5 +1,10 @@
+import { AppGate } from "@/components/AppGate";
 import { StudioScreen } from "@/components/studio/StudioScreen";
 
 export default function Home() {
-  return <StudioScreen />;
+  return (
+    <AppGate>
+      <StudioScreen />
+    </AppGate>
+  );
 }
