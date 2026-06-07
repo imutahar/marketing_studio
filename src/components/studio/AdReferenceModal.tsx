@@ -89,7 +89,7 @@ export function AdReferenceModal({ open, onClose, projectId, onGenerate }: AdRef
   const [refId, setRefId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [script, setScript] = useState<AdScript | null>(null);
-  const [resolution, setResolution] = useState("720p");
+  const [resolution, setResolution] = useState("1080p");
   const [aspectRatio, setAspectRatio] = useState("9:16");
   // NOTE(multi-output): no `variations` state — capped at 1 (see handleGenerate).
   const [busy, setBusy] = useState(false);
