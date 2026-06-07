@@ -83,7 +83,7 @@ export function UrlToAdModal({ open, onClose, onGenerate }: UrlToAdModalProps) {
   const [product, setProduct] = useState<ProductInfo | null>(null);
   const [styleId, setStyleId] = useState<string | null>(null);
   const [duration, setDuration] = useState("8 ث");
-  const [resolution, setResolution] = useState("720p");
+  const [resolution, setResolution] = useState("1080p");
 
   const close = useCallback(() => {
     onClose();
