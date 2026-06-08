@@ -71,8 +71,13 @@ export interface AttachmentValue {
 export interface GenerationRequest {
   mode: StudioMode;
   prompt: string;
-  /** Selected toolbar option labels (duration, ratio, platform, …). */
-  options: string[];
+  /**
+   * Selected toolbar options, keyed by the toolbar select id (e.g.
+   * `{ duration: "12 ث", ratio: "9:16", resolution: "1080p", videoType: "…" }`).
+   * The backend reads `duration`/`ratio`/`resolution` as params; other entries
+   * are prompt descriptors. Keyed so settings can't shift when chips reorder.
+   */
+  options: Record<string, string>;
   attachments: AttachmentValue[];
   /** Owning project, if any. */
   projectId?: string;
