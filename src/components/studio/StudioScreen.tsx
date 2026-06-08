@@ -155,6 +155,7 @@ export function StudioScreen() {
             composer={composer}
             onSubmit={handleSubmit}
             isBusy={status === "generating" || status === "draft"}
+            usage={usage}
           />
 
           {error && (

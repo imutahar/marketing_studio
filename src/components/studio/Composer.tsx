@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUp, Plus } from "lucide-react";
+import { ArrowUp, Eye, Plus } from "lucide-react";
 import type { ComposerController } from "@/hooks/useComposer";
 import type { AttachmentSlot as Slot } from "@/lib/types";
+import type { UsageSummary } from "@/lib/api/usage";
+import { estimateCost, parseDurationSeconds } from "@/lib/cost";
 import { Button } from "@/components/ui/Button";
 import { AttachmentSlot } from "./AttachmentSlot";
 import { ModeToggle } from "./ModeToggle";
@@ -20,11 +22,20 @@ interface ComposerProps {
   onSubmit: () => void;
   /** Submit is blocked while a job is in flight OR a draft preview awaits approval. */
   isBusy: boolean;
+  /** Monthly token quota; drives the live cost estimate. `null` while unknown. */
+  usage: UsageSummary | null;
 }
 
 const MAX_EXTRA_REFS = 3;
 
-export function Composer({ composer, onSubmit, isBusy }: ComposerProps) {
+/** Example prompts shown as one-tap chips while the prompt is empty. */
+const PROMPT_EXAMPLES = [
+  "عرض المنتج يدور ببطء على خلفية رخامية بإضاءة ناعمة",
+  "لقطة قريبة للمنتج مع قطرات ماء منعشة",
+  "المنتج يظهر فجأة وسط إضاءة درامية",
+];
+
+export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
   const {
     mode,
     prompt,
@@ -46,6 +57,18 @@ export function Composer({ composer, onSubmit, isBusy }: ComposerProps) {
   const [productOpen, setProductOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
 
+  // Live credit estimate from mode + duration selection + draft. Recomputes on
+  // every render (cheap, pure) so the hint by the send button always matches the
+  // current settings — and the backend deduction.
+  const isVideo = mode === "video";
+  const estimate = estimateCost({
+    mode,
+    durationSeconds: isVideo ? parseDurationSeconds(selections.duration) : undefined,
+    draft: settings.draft,
+  });
+  // Block submit only when usage is known AND the full job exceeds the balance.
+  const insufficientCredit = usage != null && estimate.full > usage.remainingTokens;
+
   // Extra reference images added via the ➕ button (not part of the fixed slots).
   const extraRefs = Object.values(attachments).filter(
     (a) => !slots.some((s) => s.id === a.slotId),
@@ -59,17 +82,18 @@ export function Composer({ composer, onSubmit, isBusy }: ComposerProps) {
   }
 
   return (
-    <div className="relative flex items-center justify-center gap-6">
+    <div className="relative flex w-full flex-col items-stretch justify-center gap-3 px-4 sm:flex-row sm:items-center sm:gap-6 sm:px-0">
       {/* Soft teal glow behind the card */}
       <div className="pointer-events-none absolute inset-x-6 -inset-y-3 -z-10 composer-glow" aria-hidden />
 
-      {/* Mode toggle on the outer (start/right) edge */}
+      {/* Mode toggle: above the card on mobile, on the outer (start/right) edge from sm up */}
       <ModeToggle mode={mode} onChange={changeMode} />
 
       {/* The composer card */}
-      <div className="relative flex min-h-[168px] w-[946px] flex-col justify-between gap-4 rounded-4xl bg-card p-4 shadow-[0px_0px_0px_1px_rgba(101,101,101,0.06),0px_13px_13px_0px_rgba(0,0,0,0.04),0px_3px_7px_0px_rgba(0,0,0,0.05)]">
-        {/* Top: prompt (start/right) + attachments (end/left) */}
-        <div className="flex items-start justify-between gap-4">
+      <div className="relative flex min-h-[168px] w-full max-w-[946px] flex-col justify-between gap-4 rounded-4xl bg-card p-4 shadow-[0px_0px_0px_1px_rgba(101,101,101,0.06),0px_13px_13px_0px_rgba(0,0,0,0.04),0px_3px_7px_0px_rgba(0,0,0,0.05)]">
+        {/* Top: prompt (start/right) + attachments (end/left).
+            Stacks on mobile (attachments drop below the prompt), side-by-side from sm up. */}
+        <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
           <textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -108,6 +132,22 @@ export function Composer({ composer, onSubmit, isBusy }: ComposerProps) {
             })}
           </div>
         </div>
+
+        {/* Prompt guidance: one-tap example chips, only while the prompt is empty. */}
+        {prompt.trim().length === 0 && (
+          <div className="flex flex-wrap gap-2">
+            {PROMPT_EXAMPLES.map((example) => (
+              <button
+                key={example}
+                type="button"
+                onClick={() => setPrompt(example)}
+                className="rounded-full border border-line px-3 py-1 text-xs text-ink-muted transition-colors hover:border-line-hover hover:text-ink"
+              >
+                {example}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Bottom: toolbar (start/right) + send (end/left) */}
         <div className="flex items-center justify-between gap-2">
@@ -158,17 +198,56 @@ export function Composer({ composer, onSubmit, isBusy }: ComposerProps) {
             >
               <Plus className="size-4" strokeWidth={1.75} />
             </button>
+
+            {/* Draft preview toggle — video only. Promoted out of the ⚙️ popover
+                since it changes both cost and flow. Active = engaged styling. */}
+            {isVideo && (
+              <button
+                type="button"
+                onClick={() => setSettings((prev) => ({ ...prev, draft: !prev.draft }))}
+                aria-pressed={settings.draft}
+                aria-label="معاينة 480p"
+                className={`flex h-8 items-center gap-1 rounded-xl border px-2 text-xs font-medium transition-colors ${
+                  settings.draft
+                    ? "border-primary bg-secondary text-primary"
+                    : "border-line text-ink-muted hover:border-line-hover hover:text-ink"
+                }`}
+              >
+                <Eye
+                  className={`size-4 ${settings.draft ? "text-primary" : "text-ink-faint"}`}
+                  strokeWidth={1.75}
+                />
+                <span>معاينة 480p</span>
+              </button>
+            )}
           </div>
 
-          <Button
-            variant="mint"
-            size="icon"
-            onClick={onSubmit}
-            disabled={isBusy || !canSubmit}
-            aria-label="إنشاء الإعلان"
-          >
-            <ArrowUp className="size-4" strokeWidth={2.5} />
-          </Button>
+          {/* Send + live cost estimate (estimate sits before the button in flow;
+              dir=rtl keeps it on the start/right of the button per the layout). */}
+          <div className="flex shrink-0 items-center gap-2">
+            <div className="flex flex-col items-end text-end">
+              {estimate.preview != null ? (
+                <span className="text-xs text-ink-muted">
+                  معاينة ~{estimate.preview} · الكامل ~{estimate.full} رصيد
+                </span>
+              ) : (
+                <span className="text-xs text-ink-muted">~{estimate.full} رصيد</span>
+              )}
+              {insufficientCredit && (
+                <span className="text-xs text-danger">الرصيد غير كافٍ</span>
+              )}
+            </div>
+
+            <Button
+              variant="mint"
+              size="icon"
+              onClick={onSubmit}
+              disabled={isBusy || !canSubmit || insufficientCredit}
+              aria-label="إنشاء الإعلان"
+            >
+              <ArrowUp className="size-4" strokeWidth={2.5} />
+            </Button>
+          </div>
         </div>
       </div>
 
