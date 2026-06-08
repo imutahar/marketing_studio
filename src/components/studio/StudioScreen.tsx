@@ -24,6 +24,7 @@ import { AssetsModal } from "./AssetsModal";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import type { Asset } from "@/lib/api/assets";
 import { getProject, type ProjectDetail, type ProjectInput } from "@/lib/api/projects";
+import { assignGenerationProject } from "@/lib/api/generation";
 
 export function StudioScreen() {
   const composer = useComposer("video");
@@ -279,6 +280,17 @@ export function StudioScreen() {
                 draft={draft}
                 onApprove={approve}
                 onReset={handleReset}
+                projects={projects}
+                onSaveToProject={async (projectId) => {
+                  if (!result) return;
+                  await assignGenerationProject(result.id, projectId);
+                  await refreshProjects();
+                }}
+                onCreateProjectAndSave={async (name) => {
+                  if (!result) return;
+                  const p = await createProject({ name });
+                  await assignGenerationProject(result.id, p.id);
+                }}
               />
             )}
           </div>
