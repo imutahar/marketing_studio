@@ -2,7 +2,9 @@
 
 import { Loader2, Download, RotateCcw, Play, ImageIcon, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { SaveToProjectButton } from "./SaveToProjectButton";
 import type { Generation, StudioMode } from "@/lib/types";
+import type { Project } from "@/lib/api/projects";
 
 interface ResultPanelProps {
   /** "generating" while the job runs; "draft" for the 480p preview; "result" when done. */
@@ -15,6 +17,12 @@ interface ResultPanelProps {
   /** Approve the draft → render full resolution. */
   onApprove?: () => void;
   onReset: () => void;
+  /** Projects available to file the finished result into. */
+  projects: Project[];
+  /** File the finished result into an existing project. */
+  onSaveToProject: (projectId: string) => Promise<void>;
+  /** Create a project from a name and file the result into it. */
+  onCreateProjectAndSave: (name: string) => Promise<void>;
 }
 
 /** In-place generating → result experience. Renders the real backend output. */
@@ -26,6 +34,9 @@ export function ResultPanel({
   draft,
   onApprove,
   onReset,
+  projects,
+  onSaveToProject,
+  onCreateProjectAndSave,
 }: ResultPanelProps) {
   const modeLabel = mode === "video" ? "فيديو" : "صورة";
 
@@ -144,6 +155,11 @@ export function ResultPanel({
           <RotateCcw className="size-4" strokeWidth={2} />
           إعلان جديد
         </Button>
+        <SaveToProjectButton
+          projects={projects}
+          onSave={onSaveToProject}
+          onCreateAndSave={onCreateProjectAndSave}
+        />
       </div>
     </div>
   );

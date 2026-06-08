@@ -46,6 +46,15 @@ export async function approveGeneration(
   return pollUntilDone(id, signal);
 }
 
+/** File a finished generation into a project (or move it between projects). */
+export function assignGenerationProject(id: string, projectId: string): Promise<Generation> {
+  return fetchJson<Generation>(`/api/generations/${id}/project`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ projectId }),
+  });
+}
+
 /** Map the composer request to the backend DTO. */
 function toPayload(request: GenerationRequest) {
   return {
