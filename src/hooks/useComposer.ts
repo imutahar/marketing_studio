@@ -113,11 +113,16 @@ export function useComposer(initialMode: StudioMode = "video") {
 
   /** Add an extra reference image (the ➕ button). */
   const addReferenceImage = useCallback((previewUrl: string, fileName: string) => {
-    const id = `ref-${crypto.randomUUID().slice(0, 8)}`;
-    setAttachments((prev) => ({
-      ...prev,
-      [id]: { slotId: id, kind: "image", fileName, previewUrl },
-    }));
+    setAttachments((prev) => {
+      // Dedupe: selecting the same media-library item twice shouldn't add a
+      // duplicate attachment. Match on previewUrl (the stable identity here).
+      if (Object.values(prev).some((a) => a.previewUrl === previewUrl)) return prev;
+      const id = `ref-${crypto.randomUUID().slice(0, 8)}`;
+      return {
+        ...prev,
+        [id]: { slotId: id, kind: "image", fileName, previewUrl },
+      };
+    });
   }, []);
 
   const applyPreset = useCallback((preset: Preset) => {

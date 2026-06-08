@@ -94,10 +94,14 @@ function delay(ms: number, signal?: AbortSignal): Promise<void> {
       reject(new DOMException("Aborted", "AbortError"));
       return;
     }
-    const id = setTimeout(resolve, ms);
-    signal?.addEventListener("abort", () => {
+    const id = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      resolve();
+    }, ms);
+    function onAbort() {
       clearTimeout(id);
       reject(new DOMException("Aborted", "AbortError"));
-    });
+    }
+    signal?.addEventListener("abort", onAbort, { once: true });
   });
 }

@@ -23,6 +23,12 @@ interface BaseSelect {
 export interface DropdownSelect extends BaseSelect {
   control: "dropdown";
   options: string[];
+  /**
+   * Optional faint secondary text shown beside each option in the list (e.g. a
+   * platform hint for a bare aspect ratio). Keyed by option value; the value
+   * itself stays the selectable/stored token. Empty string = no hint.
+   */
+  optionHints?: Record<string, string>;
 }
 
 /** A numeric slider (duration). Value is stored as "{n} {unit}". */
@@ -63,7 +69,22 @@ const VIDEO_TYPE_CARDS: SheetCard[] = [
 const VIDEO_SELECTS: ToolbarSelectConfig[] = [
   { id: "duration", control: "slider", icon: Clock, placeholder: "المدة", min: 6, max: 12, step: 1, unit: "ث", defaultValue: "12 ث" },
   { id: "resolution", control: "dropdown", icon: Monitor, placeholder: "الدقة", options: ["480p", "720p", "1080p"], defaultValue: "1080p" },
-  { id: "ratio", control: "dropdown", icon: RectangleVertical, placeholder: "الأبعاد", options: ["9:16", "16:9", "1:1", "4:3", "3:4", "21:9"], defaultValue: "9:16" },
+  {
+    id: "ratio",
+    control: "dropdown",
+    icon: RectangleVertical,
+    placeholder: "الأبعاد",
+    options: ["9:16", "16:9", "1:1", "4:3", "3:4", "21:9"],
+    defaultValue: "9:16",
+    optionHints: {
+      "9:16": "تيك توك / ريلز / ستوري",
+      "16:9": "يوتيوب",
+      "1:1": "منشور مربّع",
+      "4:3": "",
+      "3:4": "",
+      "21:9": "سينمائي",
+    },
+  },
   {
     id: "videoType",
     control: "sheet",

@@ -78,7 +78,7 @@ export function ResultPanel({
           </Button>
         </div>
 
-        <p className="text-center text-xs text-ink-faint">
+        <p className="text-center text-xs text-ink-muted">
           الصوت والإعدادات تُثبَّت عند المعاينة
         </p>
       </div>

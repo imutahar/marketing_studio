@@ -60,7 +60,7 @@ export function AttachmentSlot({ slot, value, onChange, onPick }: AttachmentSlot
       <button
         type="button"
         onClick={() => (onPick ? onPick() : inputRef.current?.click())}
-        className="relative size-full overflow-hidden rounded-3xl bg-card shadow-[0px_0px_0px_1px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-[0px_0px_0px_1px_rgba(0,0,0,0.12)]"
+        className="relative size-full overflow-hidden rounded-3xl bg-card shadow-[0px_0px_0px_1px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-[0px_0px_0px_1px_rgba(0,0,0,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
         aria-label={`إضافة ${slot.label}`}
       >
         {loading ? (
@@ -94,7 +94,7 @@ export function AttachmentSlot({ slot, value, onChange, onPick }: AttachmentSlot
           type="button"
           onClick={() => onChange(slot.id, null)}
           aria-label={`إزالة ${slot.label}`}
-          className="absolute -end-1.5 -top-1.5 z-10 grid size-5 place-items-center rounded-full bg-ink-strong text-card shadow"
+          className="absolute -end-1.5 -top-1.5 z-10 grid size-5 place-items-center rounded-full bg-ink-strong text-card shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
         >
           <X className="size-3" strokeWidth={2.5} />
         </button>

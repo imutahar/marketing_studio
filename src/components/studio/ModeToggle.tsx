@@ -29,7 +29,7 @@ export function ModeToggle({
             type="button"
             onClick={() => onChange(id)}
             aria-pressed={active}
-            className={`flex flex-1 flex-row items-center justify-center gap-1.5 rounded-2xl py-2 text-xs font-medium transition-colors sm:flex-col sm:py-0 sm:text-[10px] ${
+            className={`flex flex-1 flex-row items-center justify-center gap-1.5 rounded-2xl py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1 sm:flex-col sm:py-0 sm:text-[10px] ${
               active
                 ? "bg-card text-ink shadow-[0px_0px_0px_1px_rgba(0,0,0,0.05),0px_0px_6px_3px_rgba(0,0,0,0.05)]"
                 : "text-ink-faint hover:text-ink"
