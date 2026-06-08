@@ -77,6 +77,8 @@ function ProjectNavItem({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  // Note: options button is hover-reveal on desktop (lg+) but always visible
+  // below lg since touch devices can't hover.
   const { open, setOpen, ref } = usePopover();
 
   return (
@@ -101,7 +103,7 @@ function ProjectNavItem({
         type="button"
         aria-label="خيارات المشروع"
         onClick={() => setOpen((o) => !o)}
-        className="absolute end-1 hidden rounded-md p-1 text-ink-faint hover:bg-line group-hover:block"
+        className="absolute end-1 block rounded-md p-1 text-ink-faint hover:bg-line lg:hidden lg:group-hover:block"
       >
         <MoreHorizontal className="size-4" strokeWidth={2} />
       </button>
@@ -160,8 +162,20 @@ interface SidebarProps {
   onNewProject: () => void;
   onEditProject: (id: string) => void;
   onDeleteProject: (id: string) => void;
+  /**
+   * Fired after a navigation-style action (select/new project, tool, assets) so
+   * the mobile drawer can close and drop the user back on the canvas. No-op on
+   * the persistent desktop sidebar.
+   */
+  onNavigate?: () => void;
 }
 
+/**
+ * The sidebar content (usage, new-project, tools, assets, projects). Rendered in
+ * BOTH the persistent desktop aside and the mobile drawer — so its logic lives
+ * here once. `onNavigate` is invoked after any action that takes the user back
+ * to the canvas.
+ */
 export function Sidebar({
   usage,
   onToolSelect,
@@ -172,11 +186,12 @@ export function Sidebar({
   onNewProject,
   onEditProject,
   onDeleteProject,
+  onNavigate,
 }: SidebarProps) {
   const percent = usage?.percentUsed ?? MONTHLY_USAGE_PERCENT;
 
   return (
-    <aside className="flex h-full w-[230px] shrink-0 flex-col border-s border-line bg-card px-4 py-4 scroll-thin">
+    <div className="flex h-full w-full flex-col px-4 py-4 scroll-thin">
       {/* Monthly token usage */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
@@ -195,7 +210,14 @@ export function Sidebar({
       </div>
 
       {/* New project */}
-      <Button variant="outline" className="mt-5 w-full" onClick={onNewProject}>
+      <Button
+        variant="outline"
+        className="mt-5 w-full"
+        onClick={() => {
+          onNewProject();
+          onNavigate?.();
+        }}
+      >
         <Plus className="size-4" strokeWidth={2} />
         مشروع جديد
       </Button>
@@ -204,7 +226,14 @@ export function Sidebar({
       <div className="mt-6">
         <Section title="أدوات">
           {TOOLS.map((tool) => (
-            <ToolNavItem key={tool.id} tool={tool} onSelect={onToolSelect} />
+            <ToolNavItem
+              key={tool.id}
+              tool={tool}
+              onSelect={(id) => {
+                onToolSelect?.(id);
+                onNavigate?.();
+              }}
+            />
           ))}
         </Section>
       </div>
@@ -212,7 +241,10 @@ export function Sidebar({
       {/* Assets — global media library */}
       <button
         type="button"
-        onClick={onOpenAssets}
+        onClick={() => {
+          onOpenAssets();
+          onNavigate?.();
+        }}
         className="mt-2 flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-ink transition-colors hover:bg-neutrals"
       >
         <LayoutGrid className="size-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
@@ -231,7 +263,10 @@ export function Sidebar({
                 project={project}
                 color={PROJECT_COLORS[i % PROJECT_COLORS.length]}
                 active={project.id === activeId}
-                onSelect={() => onSelectProject(project.id)}
+                onSelect={() => {
+                  onSelectProject(project.id);
+                  onNavigate?.();
+                }}
                 onEdit={() => onEditProject(project.id)}
                 onDelete={() => onDeleteProject(project.id)}
               />
@@ -239,6 +274,6 @@ export function Sidebar({
           )}
         </Section>
       </div>
-    </aside>
+    </div>
   );
 }

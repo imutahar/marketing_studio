@@ -35,7 +35,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-0 sm:p-4"
       onClick={onClose}
     >
       <div
@@ -45,7 +45,7 @@ export function Modal({
         aria-modal="true"
         aria-label={ariaLabel}
         onClick={(e) => e.stopPropagation()}
-        className={`flex max-h-[88vh] w-full ${widthClass} flex-col overflow-hidden rounded-2xl bg-card shadow-[0px_1px_4px_0px_rgba(0,0,0,0.2)]`}
+        className={`flex h-dvh max-h-none w-full ${widthClass} flex-col overflow-hidden rounded-none bg-card shadow-[0px_1px_4px_0px_rgba(0,0,0,0.2)] sm:h-auto sm:max-h-[88vh] sm:rounded-2xl`}
       >
         {(title || subtitle) && (
           <div className="flex shrink-0 items-start justify-between gap-4 px-6 py-5">
@@ -59,7 +59,7 @@ export function Modal({
               type="button"
               aria-label="إغلاق"
               onClick={onClose}
-              className="grid size-8 shrink-0 place-items-center rounded-xl border border-line text-ink transition-colors hover:bg-neutrals"
+              className="grid size-11 shrink-0 place-items-center rounded-xl border border-line text-ink transition-colors hover:bg-neutrals sm:size-8"
             >
               <X className="size-4" strokeWidth={1.75} />
             </button>
