@@ -1,4 +1,4 @@
-import { API_BASE, fetchJson } from "./client";
+import { fetchJson } from "./client";
 import type { Generation } from "@/lib/types";
 
 export type BrandAssetKind = "logo" | "guideline" | "sheet" | "reference";
@@ -64,9 +64,10 @@ export function updateProject(id: string, patch: Partial<ProjectInput>): Promise
   });
 }
 
-export async function deleteProject(id: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/projects/${id}`, { method: "DELETE" });
-  if (!res.ok) throw new Error(`Backend ${res.status}`);
+export function deleteProject(id: string): Promise<void> {
+  // Routed through fetchJson so it carries the x-app-password header (and 401
+  // handling) like every other call. Backend returns 204 (no body).
+  return fetchJson<void>(`/api/projects/${id}`, { method: "DELETE" });
 }
 
 export function getProjectGenerations(id: string): Promise<Generation[]> {
