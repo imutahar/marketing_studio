@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, TriangleAlert } from "lucide-react";
 import { DIR, formatNumber } from "@/lib/locale";
+import { friendlyError } from "@/lib/friendly-error";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useComposer } from "@/hooks/useComposer";
 import { useGeneration } from "@/hooks/useGeneration";
@@ -238,12 +239,21 @@ export function StudioScreen() {
           />
 
           {error && (
-            <p
+            <div
               role="alert"
-              className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-2 text-sm text-danger"
+              className="flex w-full max-w-[640px] items-start gap-3 rounded-2xl border border-danger/20 bg-danger-soft px-4 py-3 text-start"
             >
-              {error}
-            </p>
+              <TriangleAlert
+                className="mt-0.5 size-5 shrink-0 text-danger"
+                strokeWidth={1.75}
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-danger">تعذّر إنشاء الإعلان</p>
+                <p className="mt-0.5 text-sm text-ink-muted">
+                  {friendlyError(error)}
+                </p>
+              </div>
+            </div>
           )}
 
           <div className="w-full pt-2">

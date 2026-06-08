@@ -149,8 +149,9 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
           </div>
         )}
 
-        {/* Bottom: toolbar (start/right) + send (end/left) */}
-        <div className="flex items-center justify-between gap-2">
+        {/* Bottom: toolbar + send. On mobile they stack so the toolbar gets the
+            full width (no squished half-row); side-by-side from sm. */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
           {/* dir=ltr pins the visual order to the design: settings (left) … + (right).
               Stays LTR by design regardless of locale — do not thread through DIR. */}
           <div dir="ltr" className="flex flex-wrap items-center gap-2">
@@ -223,8 +224,9 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
           </div>
 
           {/* Send + live cost estimate (estimate sits before the button in flow;
-              dir=rtl keeps it on the start/right of the button per the layout). */}
-          <div className="flex shrink-0 items-center gap-2">
+              dir=rtl keeps it on the start/right of the button per the layout).
+              Full-width row on mobile so estimate and send split cleanly. */}
+          <div className="flex w-full shrink-0 items-center justify-between gap-2 sm:w-auto sm:justify-end">
             <div className="flex flex-col items-end text-end">
               {estimate.preview != null ? (
                 <span className="text-xs text-ink-muted">
