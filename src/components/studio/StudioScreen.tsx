@@ -110,13 +110,6 @@ export function StudioScreen() {
     if (status !== "result") return;
     void refreshUsage();
     void refreshProjects();
-    setGenCount((c) => {
-      const next = c + 1;
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("ms.genCount", String(next));
-      }
-      return next;
-    });
   }, [status, refreshUsage, refreshProjects]);
 
   // Show the nudge once they've generated a couple of times without a project.
@@ -157,6 +150,16 @@ export function StudioScreen() {
     // submitting again would silently discard the draft and start a new paid job.
     if (!composer.canSubmit || status === "generating" || status === "draft") return;
     start({ ...composer.buildRequest(), projectId: activeId ?? undefined });
+    // Count ungrouped generations (an event, not an effect) to time the nudge.
+    if (activeId === null) {
+      setGenCount((c) => {
+        const next = c + 1;
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("ms.genCount", String(next));
+        }
+        return next;
+      });
+    }
   }
 
   function handlePickPreset(preset: Preset) {
