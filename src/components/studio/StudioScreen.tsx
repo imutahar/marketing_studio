@@ -22,6 +22,7 @@ import { AdReferenceModal } from "./AdReferenceModal";
 import { ProjectModal } from "./ProjectModal";
 import { AssetsModal } from "./AssetsModal";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { BrandNudge } from "./BrandNudge";
 import type { Asset } from "@/lib/api/assets";
 import { getProject, type ProjectDetail, type ProjectInput } from "@/lib/api/projects";
 import { assignGenerationProject } from "@/lib/api/generation";
@@ -52,6 +53,16 @@ export function StudioScreen() {
 
   // Project pending deletion (drives the confirm dialog); null when none.
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
+  // Gentle "create a brand project" nudge after a few ungrouped generations.
+  const [genCount, setGenCount] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    return Number(window.localStorage.getItem("ms.genCount") ?? 0) || 0;
+  });
+  const [nudgeDismissed, setNudgeDismissed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem("ms.brandNudgeDismissed") === "1";
+  });
 
   const [urlModalOpen, setUrlModalOpen] = useState(false);
   const [adRefModalOpen, setAdRefModalOpen] = useState(false);
@@ -99,7 +110,23 @@ export function StudioScreen() {
     if (status !== "result") return;
     void refreshUsage();
     void refreshProjects();
+    setGenCount((c) => {
+      const next = c + 1;
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem("ms.genCount", String(next));
+      }
+      return next;
+    });
   }, [status, refreshUsage, refreshProjects]);
+
+  // Show the nudge once they've generated a couple of times without a project.
+  const showNudge = !nudgeDismissed && activeId === null && genCount >= 2;
+  function dismissNudge() {
+    setNudgeDismissed(true);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("ms.brandNudgeDismissed", "1");
+    }
+  }
 
   function handleToolSelect(id: string) {
     if (id === "url-to-ad") setUrlModalOpen(true);
@@ -246,6 +273,10 @@ export function StudioScreen() {
             isBusy={status === "generating" || status === "draft"}
             usage={usage}
           />
+
+          {showNudge && (
+            <BrandNudge onCreate={openNewProject} onDismiss={dismissNudge} />
+          )}
 
           {error && (
             <div
