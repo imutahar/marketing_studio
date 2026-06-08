@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { Upload, Library, Trash2, Loader2 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { fileToDownscaledDataUrl } from "@/lib/image";
 import { useMediaLibrary } from "@/hooks/useMediaLibrary";
 
@@ -23,6 +24,7 @@ type Tab = "upload" | "library";
  */
 export function MediaLibraryModal({ open, onClose, onSelect }: MediaLibraryModalProps) {
   const { items, add, remove } = useMediaLibrary();
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("upload");
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,6 +49,7 @@ export function MediaLibraryModal({ open, onClose, onSelect }: MediaLibraryModal
   ];
 
   return (
+    <>
     <Modal
       open={open}
       onClose={onClose}
@@ -120,7 +123,7 @@ export function MediaLibraryModal({ open, onClose, onSelect }: MediaLibraryModal
                 </button>
                 <button
                   type="button"
-                  onClick={() => remove(item.id)}
+                  onClick={() => setPendingDeleteId(item.id)}
                   aria-label="حذف"
                   className="absolute end-2.5 top-2.5 grid size-7 place-items-center rounded-lg bg-black/55 text-white opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
                 >
@@ -134,5 +137,19 @@ export function MediaLibraryModal({ open, onClose, onSelect }: MediaLibraryModal
 
       <input ref={inputRef} type="file" accept="image/*" hidden onChange={handleFile} />
     </Modal>
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        title="حذف الصورة"
+        message="سيتم حذف هذه الصورة المرجعية من المكتبة نهائيًا."
+        confirmLabel="حذف"
+        cancelLabel="إلغاء"
+        danger
+        onConfirm={() => {
+          if (pendingDeleteId) remove(pendingDeleteId);
+          setPendingDeleteId(null);
+        }}
+        onCancel={() => setPendingDeleteId(null)}
+      />
+    </>
   );
 }
