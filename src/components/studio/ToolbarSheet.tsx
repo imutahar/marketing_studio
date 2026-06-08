@@ -65,7 +65,7 @@ export function ToolbarSheet({ config, value, onSelect }: ToolbarSheetProps) {
         dir={DIR}
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
-        className="flex h-8 items-center gap-1 rounded-xl border border-line px-2 text-xs font-medium transition-colors hover:border-line-hover"
+        className="flex h-8 items-center gap-1 rounded-xl border border-line px-2 text-xs font-medium transition-colors hover:border-line-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
       >
         <Icon className="size-4 text-ink-faint" strokeWidth={1.75} />
         <span className={value ? "text-ink" : "text-ink-muted"}>

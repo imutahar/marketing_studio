@@ -24,7 +24,7 @@ export function ToolbarSlider({ config, value, onChange }: ToolbarSliderProps) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        className="flex h-8 items-center gap-1 rounded-xl border border-line px-2 text-xs font-medium text-ink transition-colors hover:border-line-hover"
+        className="flex h-8 items-center gap-1 rounded-xl border border-line px-2 text-xs font-medium text-ink transition-colors hover:border-line-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
       >
         <Icon className="size-4 text-ink-faint" strokeWidth={1.75} />
         <span>{value ?? config.placeholder}</span>

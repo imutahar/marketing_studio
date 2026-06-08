@@ -101,7 +101,7 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
             rows={2}
             aria-label="وصف الإعلان"
             placeholder="اوصف ما يحدث في إعلانك..."
-            className="min-h-[56px] flex-1 resize-none bg-transparent text-md leading-6 text-ink outline-none placeholder:text-ink-muted"
+            className="min-h-[56px] flex-1 resize-none rounded-lg bg-transparent text-md leading-6 text-ink outline-none placeholder:text-ink-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
           />
           <div className="flex shrink-0 flex-wrap justify-end gap-2">
             {slots.map((slot) => (
@@ -141,7 +141,7 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
                 key={example}
                 type="button"
                 onClick={() => setPrompt(example)}
-                className="rounded-full border border-line px-3 py-1 text-xs text-ink-muted transition-colors hover:border-line-hover hover:text-ink"
+                className="rounded-full border border-line px-3 py-1 text-xs text-ink-muted transition-colors hover:border-line-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
               >
                 {example}
               </button>
@@ -194,7 +194,7 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
               aria-label="إضافة صورة مرجعية"
               disabled={extraRefs.length >= MAX_EXTRA_REFS}
               onClick={() => setMediaOpen(true)}
-              className="flex h-8 items-center justify-center rounded-xl border border-line px-2 text-ink-faint transition-colors hover:border-line-hover disabled:opacity-40"
+              className="flex h-8 items-center justify-center rounded-xl border border-line px-2 text-ink-faint transition-colors hover:border-line-hover disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
             >
               <Plus className="size-4" strokeWidth={1.75} />
             </button>
@@ -207,7 +207,7 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
                 onClick={() => setSettings((prev) => ({ ...prev, draft: !prev.draft }))}
                 aria-pressed={settings.draft}
                 aria-label="معاينة 480p"
-                className={`flex h-8 items-center gap-1 rounded-xl border px-2 text-xs font-medium transition-colors ${
+                className={`flex h-8 items-center gap-1 rounded-xl border px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1 ${
                   settings.draft
                     ? "border-primary bg-secondary text-primary"
                     : "border-line text-ink-muted hover:border-line-hover hover:text-ink"
@@ -244,6 +244,7 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
               onClick={onSubmit}
               disabled={isBusy || !canSubmit || insufficientCredit}
               aria-label="إنشاء الإعلان"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
             >
               <ArrowUp className="size-4" strokeWidth={2.5} />
             </Button>
