@@ -3,7 +3,7 @@ import { Sparkles, Folder } from "lucide-react";
 /** Centered hero: the tag chip (or active project) + the big headline. */
 export function Hero({ projectName }: { projectName?: string }) {
   return (
-    <div className="flex flex-col items-center gap-4 text-center">
+    <div className="flex flex-col items-center gap-3 text-center sm:gap-4">
       <span className="inline-flex items-center gap-2 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink">
         {projectName ? (
           <>
@@ -17,7 +17,7 @@ export function Hero({ projectName }: { projectName?: string }) {
           </>
         )}
       </span>
-      <h1 className="text-4xl font-bold leading-[40px] text-ink-strong">
+      <h1 className="text-2xl font-bold leading-tight text-ink-strong sm:text-4xl sm:leading-[40px]">
         حوّل أي منتج إلى إعلان فيديو
       </h1>
     </div>

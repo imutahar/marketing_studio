@@ -67,12 +67,12 @@ export function ResultPanel({
           </p>
         )}
 
-        <div className="flex items-center gap-3">
-          <Button variant="primary" onClick={onApprove}>
+        <div className="flex w-full max-w-[640px] flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
+          <Button variant="primary" className="w-full sm:w-auto" onClick={onApprove}>
             <Check className="size-4" strokeWidth={2} />
             اعتمد وأنشئ بالجودة الكاملة
           </Button>
-          <Button variant="outline" onClick={onReset}>
+          <Button variant="outline" className="w-full sm:w-auto" onClick={onReset}>
             <RotateCcw className="size-4" strokeWidth={2} />
             إعادة المحاولة
           </Button>
@@ -126,14 +126,21 @@ export function ResultPanel({
         </p>
       )}
 
-      <div className="flex items-center gap-3">
-        <a href={output?.url} download target="_blank" rel="noreferrer" aria-disabled={!output?.url}>
-          <Button variant="primary" disabled={!output?.url}>
+      <div className="flex w-full max-w-[640px] flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
+        <a
+          href={output?.url}
+          download
+          target="_blank"
+          rel="noreferrer"
+          aria-disabled={!output?.url}
+          className="w-full sm:w-auto"
+        >
+          <Button variant="primary" className="w-full sm:w-auto" disabled={!output?.url}>
             <Download className="size-4" strokeWidth={2} />
             تنزيل
           </Button>
         </a>
-        <Button variant="outline" onClick={onReset}>
+        <Button variant="outline" className="w-full sm:w-auto" onClick={onReset}>
           <RotateCcw className="size-4" strokeWidth={2} />
           إعلان جديد
         </Button>

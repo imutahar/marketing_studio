@@ -1,6 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Menu, X } from "lucide-react";
+import { DIR, formatNumber } from "@/lib/locale";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useComposer } from "@/hooks/useComposer";
 import { useGeneration } from "@/hooks/useGeneration";
 import { useUsage } from "@/hooks/useUsage";
@@ -51,6 +54,10 @@ export function StudioScreen() {
   const [editingProject, setEditingProject] = useState<ProjectDetail | null>(null);
   const [assetsOpen, setAssetsOpen] = useState(false);
   const [galleryKey, setGalleryKey] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const drawerRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(drawerRef, menuOpen, () => setMenuOpen(false));
 
   function openNewProject() {
     setEditingProject(null);
@@ -131,24 +138,96 @@ export function StudioScreen() {
     setGalleryKey((k) => k + 1); // refetch the project's works (new one added)
   }
 
+  // Shared sidebar props. `onNavigate` only matters for the mobile drawer
+  // (closes it after a navigation action); harmless on the desktop aside.
+  const sidebarProps = {
+    usage,
+    onToolSelect: handleToolSelect,
+    onOpenAssets: () => setAssetsOpen(true),
+    projects,
+    activeId,
+    onSelectProject: setActive,
+    onNewProject: openNewProject,
+    onEditProject: (id: string) => void openEditProject(id),
+    onDeleteProject: (id: string) => void removeProject(id),
+  };
+
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-card">
-      {/* Sidebar first in DOM → pinned to the right in RTL */}
-      <Sidebar
-        usage={usage}
-        onToolSelect={handleToolSelect}
-        onOpenAssets={() => setAssetsOpen(true)}
-        projects={projects}
-        activeId={activeId}
-        onSelectProject={setActive}
-        onNewProject={openNewProject}
-        onEditProject={(id) => void openEditProject(id)}
-        onDeleteProject={(id) => void removeProject(id)}
-      />
+    <div className="flex h-dvh w-full overflow-hidden bg-card">
+      {/* Persistent sidebar (desktop only). First in DOM → pinned to the right
+          in RTL. Hidden below lg, where it becomes the off-canvas drawer. */}
+      <aside className="hidden h-full w-[230px] shrink-0 border-s border-line bg-card lg:flex">
+        <Sidebar {...sidebarProps} />
+      </aside>
+
+      {/* Mobile off-canvas drawer (below lg). Slides from the start edge: in RTL
+          that is the right, so it is anchored end-0 and translated off-screen to
+          the right (translate-x-full → physical right, since transforms are not
+          mirrored by dir) when closed, and to 0 when open. */}
+      <div className="lg:hidden" dir={DIR}>
+        {/* Scrim — closes on tap */}
+        <div
+          className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-200 ${
+            menuOpen ? "opacity-100" : "pointer-events-none opacity-0"
+          }`}
+          onClick={() => setMenuOpen(false)}
+          aria-hidden
+        />
+        <div
+          ref={drawerRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="القائمة"
+          // When closed the drawer stays mounted (off-screen) for the slide
+          // animation; `inert` keeps its controls out of the tab order and the
+          // a11y tree so it isn't a hidden keyboard trap.
+          inert={!menuOpen}
+          // Anchored at the start edge (right in RTL, matching the desktop
+          // sidebar + the hamburger); transforms are physical, so closed =
+          // translate-x-full pushes it off the right edge, open = 0.
+          className={`fixed inset-y-0 start-0 z-50 flex w-[280px] max-w-[85vw] flex-col border-e border-line bg-card shadow-[0px_1px_4px_0px_rgba(0,0,0,0.2)] transition-transform duration-200 ease-out ${
+            menuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {/* Drawer header with close button */}
+          <div className="flex shrink-0 items-center justify-between border-b border-line px-4 py-3">
+            <span className="text-sm font-bold text-ink">القائمة</span>
+            <button
+              type="button"
+              aria-label="إغلاق"
+              onClick={() => setMenuOpen(false)}
+              className="grid size-11 place-items-center rounded-xl text-ink transition-colors hover:bg-neutrals"
+            >
+              <X className="size-5" strokeWidth={1.75} />
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto scroll-thin">
+            <Sidebar {...sidebarProps} onNavigate={() => setMenuOpen(false)} />
+          </div>
+        </div>
+      </div>
 
       {/* Main canvas */}
       <main className="studio-backdrop relative flex-1 overflow-y-auto scroll-thin">
-        <div className="mx-auto flex min-h-full max-w-[1210px] flex-col items-center gap-10 px-8 py-16">
+        {/* Mobile top bar (below lg): hamburger on the start/right edge + credits pill. */}
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-card/95 px-4 py-2 backdrop-blur lg:hidden">
+          <button
+            type="button"
+            aria-label="فتح القائمة"
+            onClick={() => setMenuOpen(true)}
+            className="grid size-11 place-items-center rounded-xl text-ink transition-colors hover:bg-neutrals"
+          >
+            <Menu className="size-5" strokeWidth={1.75} />
+          </button>
+          {usage && (
+            <span className="flex items-center gap-1 rounded-full border border-line px-3 py-1.5 text-xs text-ink">
+              <span className="text-ink-faint">رصيد</span>
+              <span className="font-bold">{formatNumber(usage.remainingTokens)}</span>
+            </span>
+          )}
+        </div>
+
+        <div className="mx-auto flex min-h-full max-w-[1210px] flex-col items-center gap-10 px-4 py-8 sm:px-8 sm:py-16">
           <Hero projectName={activeProject?.name} />
 
           <Composer

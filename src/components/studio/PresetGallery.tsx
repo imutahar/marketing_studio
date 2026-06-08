@@ -13,7 +13,7 @@ function PresetCard({ preset, onPick }: { preset: Preset; onPick: () => void }) 
       type="button"
       onClick={onPick}
       {...hoverHandlers}
-      className={`group relative h-[338px] flex-1 overflow-hidden rounded-3xl bg-gradient-to-br ${preset.gradient} text-start transition-transform hover:-translate-y-1`}
+      className={`group relative h-[220px] overflow-hidden rounded-3xl bg-gradient-to-br sm:h-[338px] sm:flex-1 ${preset.gradient} text-start transition-transform hover:-translate-y-1`}
     >
       {/* Preview plays on hover (no autoplay) so the 5 clips don't all stream
           at once on load. Falls back to the gradient if absent/blocked. */}
@@ -39,7 +39,7 @@ function PresetCard({ preset, onPick }: { preset: Preset; onPick: () => void }) 
 /** The Higgsfield-style preset cards. Clicking one pre-fills the composer. */
 export function PresetGallery({ onPick }: { onPick: (preset: Preset) => void }) {
   return (
-    <div className="flex w-full gap-[18px]">
+    <div className="grid w-full grid-cols-2 gap-3 sm:flex sm:gap-[18px]">
       {PRESETS.map((preset) => (
         <PresetCard key={preset.id} preset={preset} onPick={() => onPick(preset)} />
       ))}

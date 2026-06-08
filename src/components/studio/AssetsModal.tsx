@@ -55,7 +55,7 @@ function AssetCard({ asset, onView }: { asset: Asset; onView: () => void }) {
         rel="noreferrer"
         onClick={(e) => e.stopPropagation()}
         aria-label="تنزيل"
-        className="absolute end-2 top-2 hidden size-7 place-items-center rounded-lg bg-card/95 text-ink shadow group-hover:grid"
+        className="absolute end-2 top-2 grid size-7 place-items-center rounded-lg bg-card/95 text-ink shadow lg:hidden lg:group-hover:grid"
       >
         <Download className="size-4" strokeWidth={2} />
       </a>

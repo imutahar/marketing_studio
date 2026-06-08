@@ -122,7 +122,7 @@ export function MediaLibraryModal({ open, onClose, onSelect }: MediaLibraryModal
                   type="button"
                   onClick={() => remove(item.id)}
                   aria-label="حذف"
-                  className="absolute end-2.5 top-2.5 grid size-7 place-items-center rounded-lg bg-black/55 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                  className="absolute end-2.5 top-2.5 grid size-7 place-items-center rounded-lg bg-black/55 text-white opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
                 >
                   <Trash2 className="size-3.5" strokeWidth={1.75} />
                 </button>
