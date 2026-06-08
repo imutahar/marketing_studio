@@ -99,7 +99,7 @@ export function StudioScreen() {
     show({
       id: asset.id,
       status: "succeeded",
-      request: { mode: asset.type, prompt: asset.prompt ?? "", options: [], attachments: [] },
+      request: { mode: asset.type, prompt: asset.prompt ?? "", options: {}, attachments: [] },
       outputs: [{ type: asset.type, url: asset.url }],
       createdAt: asset.createdAt,
     });
@@ -137,7 +137,7 @@ export function StudioScreen() {
     start({
       mode: "video",
       prompt,
-      options: Object.values(selections),
+      options: selections,
       projectId: activeId ?? undefined,
       attachments: [
         { slotId: "product", kind: "product", fileName: product.title, previewUrl: product.image },

@@ -167,7 +167,7 @@ export function useComposer(initialMode: StudioMode = "video") {
     return {
       mode,
       prompt: prompt.trim(),
-      options: Object.values(selections),
+      options: selections,
       attachments: Object.values(attachments),
       negativePrompt: settings.negativePrompt.trim() || undefined,
       seed: Number.isFinite(seedNum) ? seedNum : undefined,
