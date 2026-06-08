@@ -21,6 +21,7 @@ import { UrlToAdModal } from "./UrlToAdModal";
 import { AdReferenceModal } from "./AdReferenceModal";
 import { ProjectModal } from "./ProjectModal";
 import { AssetsModal } from "./AssetsModal";
+import { ConfirmDialog } from "../ui/ConfirmDialog";
 import type { Asset } from "@/lib/api/assets";
 import { getProject, type ProjectDetail, type ProjectInput } from "@/lib/api/projects";
 
@@ -48,6 +49,9 @@ export function StudioScreen() {
     remove: removeProject,
     refresh: refreshProjects,
   } = useProjects();
+
+  // Project pending deletion (drives the confirm dialog); null when none.
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const [urlModalOpen, setUrlModalOpen] = useState(false);
   const [adRefModalOpen, setAdRefModalOpen] = useState(false);
@@ -150,7 +154,7 @@ export function StudioScreen() {
     onSelectProject: setActive,
     onNewProject: openNewProject,
     onEditProject: (id: string) => void openEditProject(id),
-    onDeleteProject: (id: string) => void removeProject(id),
+    onDeleteProject: (id: string) => setPendingDeleteId(id),
   };
 
   return (
@@ -304,6 +308,27 @@ export function StudioScreen() {
         open={assetsOpen}
         onClose={() => setAssetsOpen(false)}
         onView={viewAsset}
+      />
+
+      <ConfirmDialog
+        open={pendingDeleteId !== null}
+        title="حذف المشروع"
+        message={
+          (() => {
+            const name = projects.find((p) => p.id === pendingDeleteId)?.name;
+            return name
+              ? `سيتم حذف مشروع "${name}" نهائيًا. لا يمكن التراجع عن هذا الإجراء.`
+              : "سيتم حذف المشروع نهائيًا. لا يمكن التراجع عن هذا الإجراء.";
+          })()
+        }
+        confirmLabel="حذف"
+        cancelLabel="إلغاء"
+        danger
+        onConfirm={() => {
+          if (pendingDeleteId) void removeProject(pendingDeleteId);
+          setPendingDeleteId(null);
+        }}
+        onCancel={() => setPendingDeleteId(null)}
       />
     </div>
   );
