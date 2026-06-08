@@ -42,7 +42,6 @@ export function StudioScreen() {
   const {
     projects,
     activeId,
-    activeProject,
     setActive,
     create: createProject,
     update: updateProject,
@@ -233,7 +232,12 @@ export function StudioScreen() {
         </div>
 
         <div className="mx-auto flex min-h-full max-w-[1210px] flex-col items-center gap-10 px-4 py-8 sm:px-8 sm:py-16">
-          <Hero projectName={activeProject?.name} />
+          <Hero
+            projects={projects}
+            activeId={activeId}
+            onSelectProject={setActive}
+            onCreateProject={(name) => void createProject({ name })}
+          />
 
           <Composer
             composer={composer}

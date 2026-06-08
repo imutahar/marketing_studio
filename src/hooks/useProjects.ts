@@ -44,9 +44,10 @@ export function useProjects() {
     };
   }, []);
 
-  const setActive = useCallback((id: string) => {
+  const setActive = useCallback((id: string | null) => {
     setActiveId(id);
-    localStorage.setItem(ACTIVE_KEY, id);
+    if (id) localStorage.setItem(ACTIVE_KEY, id);
+    else localStorage.removeItem(ACTIVE_KEY);
   }, []);
 
   const create = useCallback(
