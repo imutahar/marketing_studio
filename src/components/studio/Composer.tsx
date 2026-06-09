@@ -49,6 +49,8 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
   const [characterOpen, setCharacterOpen] = useState(false);
   const [productOpen, setProductOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
+  // Where a media-library pick lands: the fixed "صور" slot, or an extra ref.
+  const [mediaTarget, setMediaTarget] = useState<"image" | "extra">("extra");
 
   // Live credit estimate from mode + duration selection + draft. Recomputes on
   // every render (cheap, pure) so the hint by the send button always matches the
@@ -108,7 +110,11 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
                     ? () => setCharacterOpen(true)
                     : slot.kind === "product"
                       ? () => setProductOpen(true)
-                      : undefined
+                      : () => {
+                          // "صور" slot → same upload/library popup as the + button.
+                          setMediaTarget("image");
+                          setMediaOpen(true);
+                        }
                 }
               />
             ))}
@@ -168,15 +174,22 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
                 />
               );
             })}
-            <button
-              type="button"
-              aria-label="إضافة صورة مرجعية"
-              disabled={extraRefs.length >= MAX_EXTRA_REFS}
-              onClick={() => setMediaOpen(true)}
-              className="flex h-8 items-center justify-center rounded-xl border border-line px-2 text-ink-faint transition-colors hover:border-line-hover disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
-            >
-              <Plus className="size-4" strokeWidth={1.75} />
-            </button>
+            {/* Add MORE reference images — video only. Image mode uses the
+                labeled "صور" slot, which opens the same library popup. */}
+            {isVideo && (
+              <button
+                type="button"
+                aria-label="إضافة صورة مرجعية"
+                disabled={extraRefs.length >= MAX_EXTRA_REFS}
+                onClick={() => {
+                  setMediaTarget("extra");
+                  setMediaOpen(true);
+                }}
+                className="flex h-8 items-center justify-center rounded-xl border border-line px-2 text-ink-faint transition-colors hover:border-line-hover disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
+              >
+                <Plus className="size-4" strokeWidth={1.75} />
+              </button>
+            )}
 
             {/* Draft preview toggle — video only. Promoted out of the ⚙️ popover
                 since it changes both cost and flow. Active = engaged styling. */}
@@ -275,7 +288,16 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
         open={mediaOpen}
         onClose={() => setMediaOpen(false)}
         onSelect={(url, name) => {
-          addReferenceImage(url, name);
+          if (mediaTarget === "image") {
+            setAttachment("image", {
+              slotId: "image",
+              kind: "image",
+              fileName: name,
+              previewUrl: url,
+            });
+          } else {
+            addReferenceImage(url, name);
+          }
           setMediaOpen(false);
         }}
       />
