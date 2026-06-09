@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUp, Eye, Plus, Images } from "lucide-react";
+import { ArrowUp, Eye, Plus, Images, Sparkles, Check, X, Loader2 } from "lucide-react";
+import { useEnhance } from "@/hooks/useEnhance";
 import type { ComposerController } from "@/hooks/useComposer";
 import type { AttachmentSlot as Slot } from "@/lib/types";
 import type { UsageSummary } from "@/lib/api/usage";
@@ -49,6 +50,26 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
   const [characterOpen, setCharacterOpen] = useState(false);
   const [productOpen, setProductOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
+
+  // ✨ Prompt enhancer. Hidden unless the backend has an LLM key configured.
+  const { available: enhanceAvailable, enhancing, suggestion, error: enhanceError, enhance, dismiss } = useEnhance();
+  // Enhance needs something to work with: typed text or an attached product.
+  const canEnhance = prompt.trim().length > 0 || !!attachments.product;
+
+  function handleEnhance() {
+    if (!canEnhance || enhancing) return;
+    enhance({
+      prompt,
+      mode,
+      options: selections,
+      productName: attachments.product?.fileName,
+    });
+  }
+
+  function acceptSuggestion() {
+    if (suggestion) setPrompt(suggestion);
+    dismiss();
+  }
 
   // Live credit estimate from mode + duration selection + draft. Recomputes on
   // every render (cheap, pure) so the hint by the send button always matches the
@@ -141,6 +162,50 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
           </div>
         </div>
 
+        {/* ✨ Enhanced-prompt suggestion — non-destructive: the live prompt is
+            untouched until the user taps "استخدم". */}
+        {(suggestion || enhanceError) && (
+          <div className="rounded-2xl border border-primary/30 bg-secondary/40 p-3" dir="rtl">
+            {enhanceError ? (
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-danger">تعذّر تحسين الوصف، حاول مجددًا</p>
+                <button
+                  type="button"
+                  onClick={dismiss}
+                  className="text-xs text-ink-muted hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                >
+                  إغلاق
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="mb-1.5 flex items-center gap-1.5">
+                  <Sparkles className="size-3.5 text-primary" strokeWidth={2} />
+                  <span className="text-[11px] font-medium text-primary">اقتراح مُحسّن</span>
+                </div>
+                <p className="whitespace-pre-wrap text-sm leading-6 text-ink">{suggestion}</p>
+                <div className="mt-2.5 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={acceptSuggestion}
+                    className="flex h-8 items-center gap-1 rounded-xl bg-primary px-3 text-xs font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
+                  >
+                    <Check className="size-3.5" strokeWidth={2.5} />
+                    استخدم
+                  </button>
+                  <button
+                    type="button"
+                    onClick={dismiss}
+                    className="flex h-8 items-center gap-1 rounded-xl border border-line px-3 text-xs font-medium text-ink-muted transition-colors hover:border-line-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
+                  >
+                    <X className="size-3.5" strokeWidth={2} />
+                    تجاهل
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Bottom: toolbar + send. On mobile they stack so the toolbar gets the
             full width (no squished half-row); side-by-side from sm. */}
@@ -153,6 +218,24 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
               onChange={(patch) => setSettings((prev) => ({ ...prev, ...patch }))}
               showCameraFixed={mode === "video"}
             />
+            {/* ✨ Rewrite the prompt with AI. Hidden unless the backend has the
+                enhancer configured. */}
+            {enhanceAvailable && (
+              <button
+                type="button"
+                onClick={handleEnhance}
+                disabled={!canEnhance || enhancing || isBusy}
+                aria-label="حسّن الوصف"
+                className="flex h-8 items-center gap-1 rounded-xl border border-line px-2 text-xs font-medium text-ink-muted transition-colors hover:border-line-hover hover:text-ink disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
+              >
+                {enhancing ? (
+                  <Loader2 className="size-4 animate-spin text-primary" strokeWidth={1.75} />
+                ) : (
+                  <Sparkles className="size-4 text-primary" strokeWidth={1.75} />
+                )}
+                <span>حسّن الوصف</span>
+              </button>
+            )}
             {selects.map((select) => {
               if (select.control === "slider") {
                 return (
