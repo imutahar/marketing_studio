@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import Image from "next/image";
 import { ArrowUp, Eye, Plus, Images, Sparkles, Check, X, Loader2 } from "lucide-react";
 import { useEnhance } from "@/hooks/useEnhance";
+import { useProductMention } from "@/hooks/useProductMention";
 import type { ComposerController } from "@/hooks/useComposer";
 import type { AttachmentSlot as Slot } from "@/lib/types";
 import type { UsageSummary } from "@/lib/api/usage";
@@ -71,6 +73,18 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
     dismiss();
   }
 
+  // @-mention product picker. Selecting a product inserts its name and attaches
+  // it (image reference + productName) via the existing "product" slot.
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const productMention = useProductMention(textareaRef, setPrompt, (p) =>
+    setAttachment("product", {
+      slotId: "product",
+      kind: "product",
+      fileName: p.name,
+      previewUrl: p.image,
+    }),
+  );
+
   // Live credit estimate from mode + duration selection + draft. Recomputes on
   // every render (cheap, pure) so the hint by the send button always matches the
   // current settings — and the backend deduction.
@@ -109,15 +123,68 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
         {/* Top: prompt (start/right) + attachments (end/left).
             Stacks on mobile (attachments drop below the prompt), side-by-side from sm up. */}
         <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            onKeyDown={handleKeyDown}
-            rows={2}
-            aria-label="وصف الإعلان"
-            placeholder="اوصف ما يحدث في إعلانك..."
-            className="min-h-[56px] flex-1 resize-none rounded-lg bg-transparent text-md leading-6 text-ink outline-none placeholder:text-ink-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
-          />
+          <div className="relative flex-1">
+            <textarea
+              ref={textareaRef}
+              value={prompt}
+              onChange={(e) => {
+                setPrompt(e.target.value);
+                productMention.onInput(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                // The mention list claims arrow/enter/escape while it's open.
+                if (productMention.onKeyDown(e)) {
+                  e.preventDefault();
+                  return;
+                }
+                handleKeyDown(e);
+              }}
+              onBlur={() => productMention.close()}
+              rows={2}
+              aria-label="وصف الإعلان"
+              placeholder="اوصف ما يحدث في إعلانك... اكتب @ لذكر منتج"
+              className="min-h-[56px] w-full resize-none rounded-lg bg-transparent text-md leading-6 text-ink outline-none placeholder:text-ink-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
+            />
+
+            {/* @-mention product list. onMouseDown (not onClick) so the pick
+                lands before the textarea's onBlur closes it. */}
+            {productMention.mention.open && (
+              <ul
+                role="listbox"
+                aria-label="منتجات"
+                className="absolute inset-x-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-2xl border border-line bg-card p-1.5 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.12)] scroll-thin"
+              >
+                {productMention.mention.results.map((p, i) => {
+                  const active = i === productMention.mention.activeIndex;
+                  return (
+                    <li key={p.id} role="option" aria-selected={active}>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          productMention.choose(p);
+                        }}
+                        onMouseEnter={() => productMention.setActive(i)}
+                        className={`flex w-full items-center gap-2.5 rounded-xl p-1.5 text-start transition-colors ${
+                          active ? "bg-secondary/50" : "hover:bg-neutrals"
+                        }`}
+                      >
+                        <span className="relative size-9 shrink-0 overflow-hidden rounded-lg bg-neutrals">
+                          <Image src={p.image} alt={p.name} fill className="object-cover" unoptimized />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm text-ink">{p.name}</span>
+                          <span className="block text-xs text-ink-muted">
+                            {p.price} {p.currency}
+                          </span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
           <div className="flex shrink-0 flex-wrap justify-end gap-2">
             {slots.map((slot) => (
               <AttachmentSlot
