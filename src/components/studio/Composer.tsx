@@ -28,13 +28,6 @@ interface ComposerProps {
 
 const MAX_EXTRA_REFS = 3;
 
-/** Example prompts shown as one-tap chips while the prompt is empty. */
-const PROMPT_EXAMPLES = [
-  "عرض المنتج يدور ببطء على خلفية رخامية بإضاءة ناعمة",
-  "لقطة قريبة للمنتج مع قطرات ماء منعشة",
-  "المنتج يظهر فجأة وسط إضاءة درامية",
-];
-
 export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
   const {
     mode,
@@ -133,21 +126,6 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
           </div>
         </div>
 
-        {/* Prompt guidance: one-tap example chips, only while the prompt is empty. */}
-        {prompt.trim().length === 0 && (
-          <div className="flex flex-wrap gap-2">
-            {PROMPT_EXAMPLES.map((example) => (
-              <button
-                key={example}
-                type="button"
-                onClick={() => setPrompt(example)}
-                className="rounded-full border border-line px-3 py-1 text-xs text-ink-muted transition-colors hover:border-line-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
-              >
-                {example}
-              </button>
-            ))}
-          </div>
-        )}
 
         {/* Bottom: toolbar + send. On mobile they stack so the toolbar gets the
             full width (no squished half-row); side-by-side from sm. */}
