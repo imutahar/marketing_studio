@@ -6,6 +6,7 @@ import {
   Type,
   Crop,
   Image as ImageIcon,
+  Copy,
   type LucideIcon,
 } from "lucide-react";
 import type { StudioMode } from "./types";
@@ -100,6 +101,7 @@ const IMAGE_SELECTS: ToolbarSelectConfig[] = [
   { id: "language", control: "dropdown", icon: Type, placeholder: "لغة النص", options: ["نص عربي", "نص إنجليزي", "بدون نص"], defaultValue: "نص عربي" },
   { id: "format", control: "dropdown", icon: Crop, placeholder: "صورة انستجرام", options: ["صورة انستجرام", "ستوري انستجرام", "منشور فيسبوك", "بنر إعلاني"], defaultValue: "صورة انستجرام" },
   { id: "imageType", control: "dropdown", icon: ImageIcon, placeholder: "نوع الصورة", options: ["تلقائي", "واقعي", "ثلاثي الأبعاد", "رسومي"], defaultValue: "تلقائي" },
+  { id: "variations", control: "dropdown", icon: Copy, placeholder: "عدد الصور", options: ["صورة واحدة", "صورتان", "٤ صور"], defaultValue: "صورة واحدة" },
 ];
 
 /** Toolbar selectors differ by mode (matches the two Figma frames). */

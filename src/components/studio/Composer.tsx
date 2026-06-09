@@ -5,7 +5,7 @@ import { ArrowUp, Eye, Plus, Images } from "lucide-react";
 import type { ComposerController } from "@/hooks/useComposer";
 import type { AttachmentSlot as Slot } from "@/lib/types";
 import type { UsageSummary } from "@/lib/api/usage";
-import { estimateCost, parseDurationSeconds } from "@/lib/cost";
+import { estimateCost, parseDurationSeconds, parseImageVariations } from "@/lib/cost";
 import { Button } from "@/components/ui/Button";
 import { AttachmentSlot } from "./AttachmentSlot";
 import { ModeToggle } from "./ModeToggle";
@@ -58,6 +58,7 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
     mode,
     durationSeconds: isVideo ? parseDurationSeconds(selections.duration) : undefined,
     draft: settings.draft,
+    imageCount: isVideo ? undefined : parseImageVariations(selections.variations),
   });
   // Block submit only when usage is known AND the full job exceeds the balance.
   const insufficientCredit = usage != null && estimate.full > usage.remainingTokens;

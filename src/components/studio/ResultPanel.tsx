@@ -96,40 +96,72 @@ export function ResultPanel({
     );
   }
 
-  const output = result?.outputs?.[0];
+  const outputs = result?.outputs ?? [];
+  const output = outputs[0];
+  // Image variations come back as a SET — show every image in a grid so the
+  // merchant can compare and download each. Video is always a single output.
+  const isMultiImage = mode !== "video" && outputs.length > 1;
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <div className="relative aspect-video w-full max-w-[640px] overflow-hidden rounded-3xl bg-neutrals">
-        {output?.url ? (
-          output.type === "video" ? (
-            <video
-              src={output.url}
-              controls
-              className="size-full object-contain bg-black"
-            />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={output.url}
-              alt={prompt || "النتيجة"}
-              className="size-full object-contain"
-            />
-          )
-        ) : (
-          // Fallback (no output url, e.g. mock without media)
-          <span className="absolute inset-0 grid place-items-center bg-gradient-to-br from-teal-300 via-cyan-400 to-sky-500">
-            {mode === "video" ? (
-              <Play className="size-12 text-card/90" />
+      {isMultiImage ? (
+        <div className="grid w-full max-w-[640px] grid-cols-2 gap-3">
+          {outputs.map((out, i) => (
+            <div
+              key={out.url ?? i}
+              className="group relative aspect-square overflow-hidden rounded-2xl bg-neutrals"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={out.url}
+                alt={prompt ? `${prompt} (${i + 1})` : `النتيجة ${i + 1}`}
+                className="size-full object-contain"
+              />
+              <a
+                href={out.url}
+                download
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`تنزيل الصورة ${i + 1}`}
+                className="absolute end-2 top-2 grid size-8 place-items-center rounded-lg bg-card/90 text-ink shadow-sm transition-opacity hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] lg:opacity-0 lg:group-hover:opacity-100"
+              >
+                <Download className="size-4" strokeWidth={2} />
+              </a>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="relative aspect-video w-full max-w-[640px] overflow-hidden rounded-3xl bg-neutrals">
+          {output?.url ? (
+            output.type === "video" ? (
+              <video
+                src={output.url}
+                controls
+                className="size-full object-contain bg-black"
+              />
             ) : (
-              <ImageIcon className="size-12 text-card/90" />
-            )}
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={output.url}
+                alt={prompt || "النتيجة"}
+                className="size-full object-contain"
+              />
+            )
+          ) : (
+            // Fallback (no output url, e.g. mock without media)
+            <span className="absolute inset-0 grid place-items-center bg-gradient-to-br from-teal-300 via-cyan-400 to-sky-500">
+              {mode === "video" ? (
+                <Play className="size-12 text-card/90" />
+              ) : (
+                <ImageIcon className="size-12 text-card/90" />
+              )}
+            </span>
+          )}
+          <span className="absolute start-3 top-3 rounded-full bg-card/95 px-3 py-1 text-xs font-medium text-ink shadow-sm">
+            {modeLabel}
           </span>
-        )}
-        <span className="absolute start-3 top-3 rounded-full bg-card/95 px-3 py-1 text-xs font-medium text-ink shadow-sm">
-          {modeLabel}
-        </span>
-      </div>
+        </div>
+      )}
 
       {prompt && (
         <p className="max-w-[640px] text-center text-sm text-ink-muted line-clamp-2">
@@ -138,19 +170,23 @@ export function ResultPanel({
       )}
 
       <div className="flex w-full max-w-[640px] flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
-        <a
-          href={output?.url}
-          download
-          target="_blank"
-          rel="noreferrer"
-          aria-disabled={!output?.url}
-          className="w-full sm:w-auto"
-        >
-          <Button variant="primary" className="w-full sm:w-auto" disabled={!output?.url}>
-            <Download className="size-4" strokeWidth={2} />
-            تنزيل
-          </Button>
-        </a>
+        {/* Single download lives here; the multi-image grid has a per-image
+            download instead. */}
+        {!isMultiImage && (
+          <a
+            href={output?.url}
+            download
+            target="_blank"
+            rel="noreferrer"
+            aria-disabled={!output?.url}
+            className="w-full sm:w-auto"
+          >
+            <Button variant="primary" className="w-full sm:w-auto" disabled={!output?.url}>
+              <Download className="size-4" strokeWidth={2} />
+              تنزيل
+            </Button>
+          </a>
+        )}
         <Button variant="outline" className="w-full sm:w-auto" onClick={onReset}>
           <RotateCcw className="size-4" strokeWidth={2} />
           إعلان جديد
