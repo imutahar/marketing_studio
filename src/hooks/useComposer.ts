@@ -30,6 +30,13 @@ const DEFAULT_SETTINGS: AdvancedSettings = {
 /** localStorage key for the remembered "draft mode" preference. */
 const DRAFT_PREF_KEY = "ms.draftMode";
 
+/**
+ * Hard ceiling on ref-* reference images — the backend accepts up to 14 image
+ * attachments. The composer UI gates well below this (MAX_REFS), so this is a
+ * defensive backstop only.
+ */
+const MAX_REF_IMAGES = 14;
+
 /** Read the persisted draft-mode preference (SSR-safe). */
 function readDraftPref(): boolean {
   if (typeof window === "undefined") return DEFAULT_SETTINGS.draft;
@@ -109,12 +116,16 @@ export function useComposer(initialMode: StudioMode = "video") {
     });
   }, []);
 
-  /** Add an extra reference image (the ➕ button). */
+  /** Add an extra reference image (the multi-select library). */
   const addReferenceImage = useCallback((previewUrl: string, fileName: string) => {
     setAttachments((prev) => {
       // Dedupe: selecting the same media-library item twice shouldn't add a
       // duplicate attachment. Match on previewUrl (the stable identity here).
       if (Object.values(prev).some((a) => a.previewUrl === previewUrl)) return prev;
+      // Defensive cap: the UI gates this via maxSelectable, but never let the
+      // ref-* list exceed the backend's reference-image ceiling.
+      const refCount = Object.keys(prev).filter((id) => id.startsWith("ref-")).length;
+      if (refCount >= MAX_REF_IMAGES) return prev;
       const id = `ref-${crypto.randomUUID().slice(0, 8)}`;
       return {
         ...prev,

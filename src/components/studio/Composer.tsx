@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUp, Eye, Plus } from "lucide-react";
+import { ArrowUp, Eye, Plus, Images } from "lucide-react";
 import type { ComposerController } from "@/hooks/useComposer";
 import type { AttachmentSlot as Slot } from "@/lib/types";
 import type { UsageSummary } from "@/lib/api/usage";
@@ -26,7 +26,7 @@ interface ComposerProps {
   usage: UsageSummary | null;
 }
 
-const MAX_EXTRA_REFS = 3;
+const MAX_REFS = 6;
 
 export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
   const {
@@ -49,8 +49,6 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
   const [characterOpen, setCharacterOpen] = useState(false);
   const [productOpen, setProductOpen] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
-  // Where a media-library pick lands: the fixed "صور" slot, or an extra ref.
-  const [mediaTarget, setMediaTarget] = useState<"image" | "extra">("extra");
 
   // Live credit estimate from mode + duration selection + draft. Recomputes on
   // every render (cheap, pure) so the hint by the send button always matches the
@@ -110,11 +108,7 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
                     ? () => setCharacterOpen(true)
                     : slot.kind === "product"
                       ? () => setProductOpen(true)
-                      : () => {
-                          // "صور" slot → same upload/library popup as the + button.
-                          setMediaTarget("image");
-                          setMediaOpen(true);
-                        }
+                      : undefined
                 }
               />
             ))}
@@ -129,6 +123,20 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
                 />
               );
             })}
+            {/* Image mode: labeled "صور" add-button opens the multi-select
+                library. (Video mode uses the compact "+" in the toolbar.) */}
+            {!isVideo && (
+              <button
+                type="button"
+                aria-label="إضافة صور مرجعية"
+                disabled={extraRefs.length >= MAX_REFS}
+                onClick={() => setMediaOpen(true)}
+                className="flex size-20 shrink-0 flex-col items-center justify-center gap-1.5 rounded-3xl bg-card text-ink-faint shadow-[0px_0px_0px_1px_rgba(0,0,0,0.05)] transition-shadow hover:shadow-[0px_0px_0px_1px_rgba(0,0,0,0.12)] disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
+              >
+                <Images className="size-5" strokeWidth={1.75} />
+                <span className="text-xs font-medium text-ink">صور</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -175,16 +183,14 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
               );
             })}
             {/* Add MORE reference images — video only. Image mode uses the
-                labeled "صور" slot, which opens the same library popup. */}
+                labeled "صور" add-button in the attachments row above. Both open
+                the same multi-select library popup. */}
             {isVideo && (
               <button
                 type="button"
-                aria-label="إضافة صورة مرجعية"
-                disabled={extraRefs.length >= MAX_EXTRA_REFS}
-                onClick={() => {
-                  setMediaTarget("extra");
-                  setMediaOpen(true);
-                }}
+                aria-label="إضافة صور مرجعية"
+                disabled={extraRefs.length >= MAX_REFS}
+                onClick={() => setMediaOpen(true)}
                 className="flex h-8 items-center justify-center rounded-xl border border-line px-2 text-ink-faint transition-colors hover:border-line-hover disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
               >
                 <Plus className="size-4" strokeWidth={1.75} />
@@ -287,17 +293,11 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
       <MediaLibraryModal
         open={mediaOpen}
         onClose={() => setMediaOpen(false)}
-        onSelect={(url, name) => {
-          if (mediaTarget === "image") {
-            setAttachment("image", {
-              slotId: "image",
-              kind: "image",
-              fileName: name,
-              previewUrl: url,
-            });
-          } else {
-            addReferenceImage(url, name);
-          }
+        maxSelectable={MAX_REFS - extraRefs.length}
+        onSelectMany={(picked) => {
+          // Each pick becomes a ref-* image attachment (addReferenceImage
+          // dedupes by previewUrl; the cap is enforced via maxSelectable).
+          for (const { url, name } of picked) addReferenceImage(url, name);
           setMediaOpen(false);
         }}
       />

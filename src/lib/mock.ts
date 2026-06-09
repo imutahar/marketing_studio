@@ -88,9 +88,7 @@ export function attachmentsForMode(mode: StudioMode): AttachmentSlot[] {
       { id: "character", kind: "character", label: "الشخصية" },
     ];
   }
-  // Image mode: required product + an images slot.
-  return [
-    { id: "product", kind: "product", label: "المنتج" },
-    { id: "image", kind: "image", label: "صور" },
-  ];
+  // Image mode: just the required product. Reference images are added through
+  // the unified multi-select library (ref-* attachments), not a fixed slot.
+  return [{ id: "product", kind: "product", label: "المنتج" }];
 }
