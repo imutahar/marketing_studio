@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { Upload, Library, Trash2, Loader2, Check } from "lucide-react";
+import { Upload, Library, Trash2, Loader2, Check, X } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { fileToDownscaledDataUrl } from "@/lib/image";
@@ -114,6 +114,10 @@ export function MediaLibraryModal({
     });
   }
 
+  function removeUpload(url: string) {
+    setUploaded((prev) => prev.filter((u) => u.url !== url));
+  }
+
   function confirm() {
     if (count === 0) return;
     onSelectMany(confirmed);
@@ -171,20 +175,51 @@ export function MediaLibraryModal({
                 type="button"
                 onClick={() => inputRef.current?.click()}
                 disabled={busy || atCap}
-                className="flex aspect-[16/9] w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-line-hover text-ink-muted transition-colors hover:bg-neutrals disabled:opacity-60"
+                className={`flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-line-hover text-ink-muted transition-colors hover:bg-neutrals disabled:opacity-60 ${
+                  uploaded.length > 0 ? "py-6" : "aspect-[16/9]"
+                }`}
               >
                 {busy ? (
                   <Loader2 className="size-7 animate-spin" strokeWidth={1.75} />
                 ) : (
                   <Upload className="size-7" strokeWidth={1.75} />
                 )}
-                <span className="text-sm font-medium text-ink">رفع صورة</span>
+                <span className="text-sm font-medium text-ink">
+                  {uploaded.length > 0 ? "رفع المزيد" : "رفع صورة"}
+                </span>
                 <span className="text-xs">JPG / PNG · يمكن اختيار عدة ملفات</span>
               </button>
+
+              {/* Preview the just-uploaded images before confirming. */}
               {uploaded.length > 0 && (
-                <p className="mt-3 text-xs text-ink-muted">
-                  تم رفع {uploaded.length} {uploaded.length === 1 ? "صورة" : "صور"}.
-                </p>
+                <div className="mt-4">
+                  <p className="mb-2 text-xs font-medium text-ink">
+                    صور ستُضاف ({uploaded.length})
+                  </p>
+                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                    {uploaded.map((u) => (
+                      <div key={u.url} className="relative">
+                        <span className="relative block aspect-square overflow-hidden rounded-xl border border-primary bg-neutrals">
+                          <Image
+                            src={u.url}
+                            alt={u.name}
+                            fill
+                            className="object-cover"
+                            unoptimized
+                          />
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removeUpload(u.url)}
+                          aria-label="إزالة"
+                          className="absolute end-1.5 top-1.5 grid size-6 place-items-center rounded-lg bg-black/55 text-white transition-colors hover:bg-black/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+                        >
+                          <X className="size-3.5" strokeWidth={2} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           ) : items.length === 0 ? (
