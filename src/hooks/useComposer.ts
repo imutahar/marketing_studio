@@ -11,9 +11,8 @@ import type {
 } from "@/lib/types";
 
 export interface AdvancedSettings {
+  /** Comma-joined "things to avoid" terms (from the avoid chips). */
   negativePrompt: string;
-  /** Numeric string ("" = random). */
-  seed: string;
   cameraFixed: boolean;
   /** Video only: generate synced audio (voice/SFX/music). Default off. */
   generateAudio: boolean;
@@ -23,7 +22,6 @@ export interface AdvancedSettings {
 
 const DEFAULT_SETTINGS: AdvancedSettings = {
   negativePrompt: "",
-  seed: "",
   cameraFixed: false,
   generateAudio: false,
   draft: false,
@@ -163,14 +161,12 @@ export function useComposer(initialMode: StudioMode = "video") {
   }, [mode]);
 
   const buildRequest = useCallback((): GenerationRequest => {
-    const seedNum = Number.parseInt(settings.seed, 10);
     return {
       mode,
       prompt: prompt.trim(),
       options: selections,
       attachments: Object.values(attachments),
       negativePrompt: settings.negativePrompt.trim() || undefined,
-      seed: Number.isFinite(seedNum) ? seedNum : undefined,
       cameraFixed: mode === "video" && settings.cameraFixed ? true : undefined,
       generateAudio: mode === "video" && settings.generateAudio ? true : undefined,
       draft: mode === "video" && settings.draft ? true : undefined,

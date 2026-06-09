@@ -8,13 +8,36 @@ import type { AdvancedSettings } from "@/hooks/useComposer";
 interface ToolbarSettingsProps {
   settings: AdvancedSettings;
   onChange: (patch: Partial<AdvancedSettings>) => void;
-  /** Camera-fixed only applies to video. */
+  /** Camera-fixed + audio only apply to video. */
   showCameraFixed: boolean;
 }
 
-/** ⚙️ Advanced settings popover: negative prompt, camera-fixed, audio, seed. */
+/** Common things merchants want to keep OUT of the result (one-tap, no typing). */
+const AVOID_TERMS = [
+  "نصوص مشوّهة",
+  "أيادٍ غير واقعية",
+  "علامات مائية",
+  "وجوه مشوّهة",
+  "ألوان باهتة",
+];
+
+const checkbox =
+  "mt-0.5 size-4 shrink-0 accent-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1";
+
+/** ⚙️ Advanced settings: "things to avoid" chips + (video) camera + audio. */
 export function ToolbarSettings({ settings, onChange, showCameraFixed }: ToolbarSettingsProps) {
   const { open, setOpen, ref } = usePopover();
+
+  const avoided = settings.negativePrompt
+    ? settings.negativePrompt.split("، ").filter(Boolean)
+    : [];
+
+  function toggleAvoid(term: string) {
+    const next = avoided.includes(term)
+      ? avoided.filter((t) => t !== term)
+      : [...avoided, term];
+    onChange({ negativePrompt: next.join("، ") });
+  }
 
   return (
     <div className="relative" dir={DIR} ref={ref}>
@@ -32,49 +55,65 @@ export function ToolbarSettings({ settings, onChange, showCameraFixed }: Toolbar
         <div className="absolute bottom-full z-30 mb-1 w-[280px] rounded-xl border border-line bg-card p-3 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.1)]">
           <p className="mb-2 text-xs font-bold text-ink">إعدادات متقدمة</p>
 
-          <label className="block text-[11px] text-ink-muted">النص السلبي (تجنّب)</label>
-          <textarea
-            value={settings.negativePrompt}
-            onChange={(e) => onChange({ negativePrompt: e.target.value })}
-            rows={2}
-            placeholder="مثال: نصوص مشوهة، أيادٍ غير واقعية"
-            className="mt-0.5 w-full resize-none rounded-lg border border-line bg-transparent p-2 text-xs text-ink outline-none focus:border-line-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
-          />
+          {/* "Things to avoid" — one-tap chips instead of a negative-prompt box. */}
+          <p className="text-[11px] font-medium text-ink">أشياء نتجنّبها في الإعلان</p>
+          <p className="mt-0.5 text-[10px] text-ink-faint">
+            اختر ما لا تريد ظهوره في النتيجة
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {AVOID_TERMS.map((term) => {
+              const active = avoided.includes(term);
+              return (
+                <button
+                  key={term}
+                  type="button"
+                  onClick={() => toggleAvoid(term)}
+                  aria-pressed={active}
+                  className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1 ${
+                    active
+                      ? "border-primary bg-secondary text-primary"
+                      : "border-line text-ink-muted hover:border-line-hover hover:text-ink"
+                  }`}
+                >
+                  {term}
+                </button>
+              );
+            })}
+          </div>
 
           {showCameraFixed && (
-            <label className="mt-3 flex items-center justify-between text-xs text-ink">
-              تثبيت الكاميرا
+            <label className="mt-4 flex items-start justify-between gap-3 text-xs text-ink">
+              <span>
+                كاميرا ثابتة
+                <span className="mt-0.5 block text-[10px] text-ink-faint">
+                  بدون حركة للكاميرا في الفيديو
+                </span>
+              </span>
               <input
                 type="checkbox"
                 checked={settings.cameraFixed}
                 onChange={(e) => onChange({ cameraFixed: e.target.checked })}
-                className="size-4 accent-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
+                className={checkbox}
               />
             </label>
           )}
 
           {showCameraFixed && (
-            <label className="mt-3 flex items-center justify-between text-xs text-ink">
-              توليد الصوت (تعليق وموسيقى)
+            <label className="mt-3 flex items-start justify-between gap-3 text-xs text-ink">
+              <span>
+                إضافة صوت
+                <span className="mt-0.5 block text-[10px] text-ink-faint">
+                  تعليق صوتي وموسيقى تلقائية
+                </span>
+              </span>
               <input
                 type="checkbox"
                 checked={settings.generateAudio}
                 onChange={(e) => onChange({ generateAudio: e.target.checked })}
-                className="size-4 accent-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
+                className={checkbox}
               />
             </label>
           )}
-
-          <label className="mt-3 block text-[11px] text-ink-muted">
-            البذرة — لتكرار نفس النتيجة
-          </label>
-          <input
-            value={settings.seed}
-            onChange={(e) => onChange({ seed: e.target.value.replace(/[^0-9]/g, "") })}
-            inputMode="numeric"
-            placeholder="عشوائي"
-            className="mt-0.5 h-8 w-full rounded-lg border border-line bg-transparent px-2 text-xs text-ink outline-none focus:border-line-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
-          />
         </div>
       )}
     </div>
