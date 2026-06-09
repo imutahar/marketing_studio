@@ -28,6 +28,21 @@ export function parseDurationSeconds(selection: string | undefined): number {
   return match ? Number(match[1]) : DEFAULT_VIDEO_SECONDS;
 }
 
+/**
+ * How many images the "عدد الصور" selection asks for. Mirrors the backend
+ * `imageVariationCount`. Unknown/missing → 1.
+ */
+export function parseImageVariations(selection: string | undefined): number {
+  switch (selection) {
+    case "صورتان":
+      return 2;
+    case "٤ صور":
+      return 4;
+    default:
+      return 1;
+  }
+}
+
 export interface CostEstimate {
   /** Credits charged for the full-quality render. */
   full: number;
@@ -45,12 +60,15 @@ export function estimateCost({
   mode,
   durationSeconds,
   draft,
+  imageCount,
 }: {
   mode: StudioMode;
   durationSeconds?: number;
   draft?: boolean;
+  /** Image mode: number of variations requested (each bills separately). */
+  imageCount?: number;
 }): CostEstimate {
-  if (mode === "image") return { full: IMAGE_COST };
+  if (mode === "image") return { full: IMAGE_COST * Math.max(1, imageCount ?? 1) };
 
   const full = (durationSeconds ?? DEFAULT_VIDEO_SECONDS) * VIDEO_COST_PER_SECOND;
   if (draft) return { full, preview: Math.round(full * DRAFT_MULTIPLIER) };
