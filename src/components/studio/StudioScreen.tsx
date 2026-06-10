@@ -9,7 +9,8 @@ import { useComposer } from "@/hooks/useComposer";
 import { useGeneration } from "@/hooks/useGeneration";
 import { useUsage } from "@/hooks/useUsage";
 import { useProjects } from "@/hooks/useProjects";
-import type { Preset } from "@/lib/types";
+import type { Generation, Preset } from "@/lib/types";
+import { requestForReuse } from "@/lib/reuse";
 import type { UrlToAdResult } from "./UrlToAdModal";
 import { Sidebar } from "./Sidebar";
 import { Hero } from "./Hero";
@@ -66,6 +67,8 @@ export function StudioScreen() {
 
   const [urlModalOpen, setUrlModalOpen] = useState(false);
   const [adRefModalOpen, setAdRefModalOpen] = useState(false);
+  // Reference video pre-loaded into the ad-reference modal via "استخدم كمرجع".
+  const [adRefInitialUrl, setAdRefInitialUrl] = useState<string | undefined>();
   const [projectModalOpen, setProjectModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectDetail | null>(null);
   const [assetsOpen, setAssetsOpen] = useState(false);
@@ -74,6 +77,9 @@ export function StudioScreen() {
 
   const drawerRef = useRef<HTMLDivElement>(null);
   useFocusTrap(drawerRef, menuOpen, () => setMenuOpen(false));
+
+  // Scroll target so "عدّل الوصف" brings the (now-populated) composer into view.
+  const composerRef = useRef<HTMLDivElement>(null);
 
   function openNewProject() {
     setEditingProject(null);
@@ -123,7 +129,10 @@ export function StudioScreen() {
 
   function handleToolSelect(id: string) {
     if (id === "url-to-ad") setUrlModalOpen(true);
-    else if (id === "reference-ad") setAdRefModalOpen(true);
+    else if (id === "reference-ad") {
+      setAdRefInitialUrl(undefined); // fresh flow — no pre-loaded reference
+      setAdRefModalOpen(true);
+    }
   }
 
   function handleGenerateFromUrl({ product, style, duration, resolution }: UrlToAdResult) {
@@ -171,6 +180,27 @@ export function StudioScreen() {
     resetGeneration();
     composer.reset();
     setGalleryKey((k) => k + 1); // refetch the project's works (new one added)
+  }
+
+  /** "أعد الإنشاء" — re-run the exact same request for another take. */
+  function handleRecreate(gen: Generation) {
+    resetGeneration();
+    start({ ...requestForReuse(gen), projectId: activeId ?? undefined });
+  }
+
+  /** "عدّل الوصف" — load the prompt + settings into the composer to tweak. */
+  function handleReuse(gen: Generation) {
+    composer.applyGeneration(requestForReuse(gen));
+    resetGeneration(); // back to the compose view so the user can edit
+    composerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  /** "استخدم كمرجع" — open the ad-reference flow pre-loaded with this video. */
+  function handleUseAsReference(gen: Generation) {
+    const url = gen.outputs?.[0]?.url;
+    if (!url) return;
+    setAdRefInitialUrl(url);
+    setAdRefModalOpen(true);
   }
 
   // Shared sidebar props. `onNavigate` only matters for the mobile drawer
@@ -270,12 +300,14 @@ export function StudioScreen() {
             onCreateProject={(name) => void createProject({ name })}
           />
 
-          <Composer
-            composer={composer}
-            onSubmit={handleSubmit}
-            isBusy={status === "generating" || status === "draft"}
-            usage={usage}
-          />
+          <div ref={composerRef} className="w-full scroll-mt-4">
+            <Composer
+              composer={composer}
+              onSubmit={handleSubmit}
+              isBusy={status === "generating" || status === "draft"}
+              usage={usage}
+            />
+          </div>
 
           {showNudge && (
             <BrandNudge onCreate={openNewProject} onDismiss={dismissNudge} />
@@ -325,6 +357,9 @@ export function StudioScreen() {
                   const p = await createProject({ name });
                   await assignGenerationProject(result.id, p.id);
                 }}
+                onRecreate={result ? () => handleRecreate(result) : undefined}
+                onReuse={result ? () => handleReuse(result) : undefined}
+                onUseAsReference={result ? () => handleUseAsReference(result) : undefined}
               />
             )}
           </div>
@@ -339,10 +374,15 @@ export function StudioScreen() {
 
       <AdReferenceModal
         open={adRefModalOpen}
-        onClose={() => setAdRefModalOpen(false)}
+        onClose={() => {
+          setAdRefModalOpen(false);
+          setAdRefInitialUrl(undefined);
+        }}
         projectId={activeId}
+        initialReferenceUrl={adRefInitialUrl}
         onGenerate={(generationId) => {
           setAdRefModalOpen(false);
+          setAdRefInitialUrl(undefined);
           track(generationId);
         }}
       />

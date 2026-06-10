@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Download, RotateCcw, Play, ImageIcon, Check } from "lucide-react";
+import { Loader2, Download, RotateCcw, Play, ImageIcon, Check, RefreshCw, Pencil, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { SaveToProjectButton } from "./SaveToProjectButton";
 import type { Generation, StudioMode } from "@/lib/types";
@@ -23,6 +23,12 @@ interface ResultPanelProps {
   onSaveToProject: (projectId: string) => Promise<void>;
   /** Create a project from a name and file the result into it. */
   onCreateProjectAndSave: (name: string) => Promise<void>;
+  /** Re-run this exact generation (another take). */
+  onRecreate?: () => void;
+  /** Load this generation's prompt + settings into the composer to tweak. */
+  onReuse?: () => void;
+  /** Use this result as an ad reference (video results only). */
+  onUseAsReference?: () => void;
 }
 
 /** In-place generating → result experience. Renders the real backend output. */
@@ -37,6 +43,9 @@ export function ResultPanel({
   projects,
   onSaveToProject,
   onCreateProjectAndSave,
+  onRecreate,
+  onReuse,
+  onUseAsReference,
 }: ResultPanelProps) {
   const modeLabel = mode === "video" ? "فيديو" : "صورة";
 
@@ -101,6 +110,7 @@ export function ResultPanel({
   // Image variations come back as a SET — show every image in a grid so the
   // merchant can compare and download each. Video is always a single output.
   const isMultiImage = mode !== "video" && outputs.length > 1;
+  const isVideoResult = output?.type === "video";
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
@@ -167,6 +177,48 @@ export function ResultPanel({
         <p className="max-w-[640px] text-center text-sm text-ink-muted line-clamp-2">
           {prompt}
         </p>
+      )}
+
+      {/* Iterate on this ad — recreate / edit the prompt / use as a reference. */}
+      {(onRecreate || onReuse || (onUseAsReference && isVideoResult)) && (
+        <div className="flex w-full max-w-[640px] flex-col items-center gap-2">
+          <p className="text-xs text-ink-faint">أنشئ المزيد من هذا الإعلان</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {onRecreate && (
+              <button
+                type="button"
+                onClick={onRecreate}
+                title="إنشاء نسخة جديدة بنفس الإعدادات"
+                className="flex h-9 items-center gap-1.5 rounded-xl border border-line px-3 text-sm font-medium text-ink-muted transition-colors hover:border-line-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
+              >
+                <RefreshCw className="size-4" strokeWidth={1.75} />
+                أعد الإنشاء
+              </button>
+            )}
+            {onReuse && (
+              <button
+                type="button"
+                onClick={onReuse}
+                title="تحميل الوصف والإعدادات في المحرّر لتعديلها"
+                className="flex h-9 items-center gap-1.5 rounded-xl border border-line px-3 text-sm font-medium text-ink-muted transition-colors hover:border-line-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
+              >
+                <Pencil className="size-4" strokeWidth={1.75} />
+                عدّل الوصف
+              </button>
+            )}
+            {onUseAsReference && isVideoResult && (
+              <button
+                type="button"
+                onClick={onUseAsReference}
+                title="استخدم هذا الفيديو كمرجع لإنشاء إعلان مشابه"
+                className="flex h-9 items-center gap-1.5 rounded-xl border border-line px-3 text-sm font-medium text-ink-muted transition-colors hover:border-line-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1"
+              >
+                <Link2 className="size-4" strokeWidth={1.75} />
+                استخدم كمرجع
+              </button>
+            )}
+          </div>
+        </div>
       )}
 
       <div className="flex w-full max-w-[640px] flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
