@@ -8,8 +8,10 @@ import type { AdvancedSettings } from "@/hooks/useComposer";
 interface ToolbarSettingsProps {
   settings: AdvancedSettings;
   onChange: (patch: Partial<AdvancedSettings>) => void;
-  /** Camera-fixed + audio only apply to video. */
+  /** Camera-fixed: video only AND only when the model supports it (not Seedance 2.0). */
   showCameraFixed: boolean;
+  /** Synced-audio toggle: video only. */
+  showAudio: boolean;
 }
 
 /** Common things merchants want to keep OUT of the result (one-tap, no typing). */
@@ -25,7 +27,7 @@ const checkbox =
   "mt-0.5 size-4 shrink-0 accent-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1";
 
 /** ⚙️ Advanced settings: "things to avoid" chips + (video) camera + audio. */
-export function ToolbarSettings({ settings, onChange, showCameraFixed }: ToolbarSettingsProps) {
+export function ToolbarSettings({ settings, onChange, showCameraFixed, showAudio }: ToolbarSettingsProps) {
   const { open, setOpen, ref } = usePopover();
 
   const avoided = settings.negativePrompt
@@ -98,7 +100,7 @@ export function ToolbarSettings({ settings, onChange, showCameraFixed }: Toolbar
             </label>
           )}
 
-          {showCameraFixed && (
+          {showAudio && (
             <label className="mt-3 flex items-start justify-between gap-3 text-xs text-ink">
               <span>
                 إضافة صوت
