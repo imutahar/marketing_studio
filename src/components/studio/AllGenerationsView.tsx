@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getAllGenerations } from "@/lib/api/generation";
 import { GenerationGrid } from "./GenerationGrid";
+import type { PendingJob } from "@/hooks/useGenerationQueue";
 import type { Generation } from "@/lib/types";
 
 interface AllGenerationsViewProps {
@@ -12,6 +13,9 @@ interface AllGenerationsViewProps {
   onRecreate: (generation: Generation) => void;
   onReuse: (generation: Generation) => void;
   onUseAsReference: (generation: Generation) => void;
+  /** Live in-flight generations + cancel. */
+  pending?: PendingJob[];
+  onCancel?: (id: string) => void;
 }
 
 /** Full-page feed of every generated ad across all projects. */
@@ -21,6 +25,8 @@ export function AllGenerationsView({
   onRecreate,
   onReuse,
   onUseAsReference,
+  pending,
+  onCancel,
 }: AllGenerationsViewProps) {
   const [items, setItems] = useState<Generation[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -39,12 +45,15 @@ export function AllGenerationsView({
     };
   }, [refreshKey]);
 
-  if (!loaded) return null;
+  // Wait for the first load only when there's nothing live to show yet.
+  if (!loaded && (!pending || pending.length === 0)) return null;
 
   return (
     <GenerationGrid
       title="كل الأعمال"
       generations={items}
+      pending={pending}
+      onCancel={onCancel}
       onView={onView}
       onRecreate={onRecreate}
       onReuse={onReuse}

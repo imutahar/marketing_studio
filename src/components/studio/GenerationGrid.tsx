@@ -12,6 +12,8 @@ import {
   Download,
   Copy,
   Trash2,
+  Loader2,
+  X,
 } from "lucide-react";
 import { useHoverVideo } from "@/hooks/useHoverVideo";
 import { usePopover } from "@/hooks/usePopover";
@@ -19,7 +21,33 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { deleteGeneration } from "@/lib/api/generation";
 import { downloadUrl } from "@/lib/download";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
+import type { PendingJob } from "@/hooks/useGenerationQueue";
 import type { Generation } from "@/lib/types";
+
+/** A live "generating" card with a cancel button. */
+function PendingCard({ job, onCancel }: { job: PendingJob; onCancel?: (id: string) => void }) {
+  return (
+    <div className="relative flex aspect-[3/4] flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border border-line bg-neutrals p-3 text-center">
+      <Loader2 className="size-7 animate-spin text-primary" strokeWidth={1.75} />
+      <span className="text-xs font-medium text-ink-muted">
+        {job.status === "queued" ? "في الانتظار…" : "جاري الإنشاء…"}
+      </span>
+      {job.prompt && (
+        <span className="line-clamp-2 text-[11px] text-ink-faint">{job.prompt}</span>
+      )}
+      {onCancel && (
+        <button
+          type="button"
+          onClick={() => onCancel(job.id)}
+          className="mt-1 flex h-7 items-center gap-1 rounded-lg border border-line px-2.5 text-[11px] font-medium text-ink-muted transition-colors hover:border-line-hover hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+        >
+          <X className="size-3.5" strokeWidth={2} />
+          إلغاء
+        </button>
+      )}
+    </div>
+  );
+}
 
 interface CardActions {
   onView: () => void;
@@ -147,6 +175,10 @@ interface GenerationGridProps {
   onDeleted: (id: string) => void;
   /** Shown when there are no generations (e.g. the all-generations view). */
   emptyHint?: string;
+  /** Live in-flight generations rendered as cards before the finished ones. */
+  pending?: PendingJob[];
+  /** Cancel an in-flight generation. */
+  onCancel?: (id: string) => void;
 }
 
 /**
@@ -164,6 +196,8 @@ export function GenerationGrid({
   onUseAsReference,
   onDeleted,
   emptyHint,
+  pending,
+  onCancel,
 }: GenerationGridProps) {
   const [favOnly, setFavOnly] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Generation | null>(null);
@@ -211,6 +245,8 @@ export function GenerationGrid({
   }
 
   const visible = favOnly ? generations.filter((g) => isFavorite(g.id)) : generations;
+  // In-flight cards only show in the unfiltered view (nothing to favorite yet).
+  const showPending = favOnly ? [] : pending ?? [];
 
   return (
     <div className="w-full">
@@ -231,12 +267,15 @@ export function GenerationGrid({
         </button>
       </div>
 
-      {visible.length === 0 ? (
+      {showPending.length === 0 && visible.length === 0 ? (
         <p className="py-10 text-center text-sm text-ink-muted">
           {favOnly ? "لا توجد إعلانات مفضّلة بعد." : emptyHint ?? "لا توجد أعمال بعد."}
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-5">
+          {showPending.map((job) => (
+            <PendingCard key={job.id} job={job} onCancel={onCancel} />
+          ))}
           {visible.map((gen) => (
             <WorkCard
               key={gen.id}
