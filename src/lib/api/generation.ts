@@ -58,6 +58,11 @@ export function getGenerationCapabilities(): Promise<{
   return fetchJson("/api/generations/capabilities");
 }
 
+/** Delete a generation (owner-scoped on the backend). */
+export function deleteGeneration(id: string): Promise<void> {
+  return fetchJson<void>(`/api/generations/${id}`, { method: "DELETE" });
+}
+
 /** File a finished generation into a project (or move it between projects). */
 export function assignGenerationProject(id: string, projectId: string): Promise<Generation> {
   return fetchJson<Generation>(`/api/generations/${id}/project`, {

@@ -334,7 +334,14 @@ export function StudioScreen() {
           <div className="w-full pt-2">
             {status === "idle" ? (
               <div className="flex w-full flex-col gap-10">
-                <ProjectGallery projectId={activeId} refreshKey={galleryKey} onView={show} />
+                <ProjectGallery
+                  projectId={activeId}
+                  refreshKey={galleryKey}
+                  onView={show}
+                  onRecreate={handleRecreate}
+                  onReuse={handleReuse}
+                  onUseAsReference={handleUseAsReference}
+                />
                 <PresetGallery onPick={handlePickPreset} />
               </div>
             ) : (
