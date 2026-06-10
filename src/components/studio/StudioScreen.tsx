@@ -7,6 +7,7 @@ import { friendlyError } from "@/lib/friendly-error";
 import { useFocusTrap } from "@/hooks/useFocusTrap";
 import { useComposer } from "@/hooks/useComposer";
 import { useGeneration } from "@/hooks/useGeneration";
+import { useGenerationQueue } from "@/hooks/useGenerationQueue";
 import { useUsage } from "@/hooks/useUsage";
 import { useProjects } from "@/hooks/useProjects";
 import type { Generation, Preset } from "@/lib/types";
@@ -27,19 +28,14 @@ import { BrandNudge } from "./BrandNudge";
 import { getProject, type ProjectDetail, type ProjectInput } from "@/lib/api/projects";
 import { assignGenerationProject } from "@/lib/api/generation";
 
+/** Max concurrent in-flight generations (matches the backend provider slots). */
+const MAX_CONCURRENT = 4;
+
 export function StudioScreen() {
   const composer = useComposer("video");
-  const {
-    status,
-    result,
-    draft,
-    error,
-    start,
-    track,
-    approve,
-    show,
-    reset: resetGeneration,
-  } = useGeneration();
+  // useGeneration now only powers the focused "view a finished card" panel;
+  // in-flight generations are tracked by the queue (live cards in the feed).
+  const { status, result, show, reset: resetGeneration } = useGeneration();
   const { usage, refresh: refreshUsage } = useUsage();
   const {
     projects,
@@ -74,6 +70,16 @@ export function StudioScreen() {
   const [view, setView] = useState<"studio" | "all">("studio");
   const [galleryKey, setGalleryKey] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // In-flight generations (live cards in the feed). On settle: refresh the feed,
+  // usage and the active project so the finished card + new balance appear.
+  const queue = useGenerationQueue(() => {
+    setGalleryKey((k) => k + 1);
+    void refreshUsage();
+    void refreshProjects();
+  });
+  // Cap concurrent in-flight jobs to the backend's provider-slot count.
+  const atConcurrencyCap = queue.pending.length >= MAX_CONCURRENT;
 
   const drawerRef = useRef<HTMLDivElement>(null);
   useFocusTrap(drawerRef, menuOpen, () => setMenuOpen(false));
@@ -137,8 +143,8 @@ export function StudioScreen() {
     const selections = { videoType: style.label, duration, resolution };
     composer.applyProduct({ prompt, imageUrl: product.image, fileName: product.title, selections });
     setUrlModalOpen(false);
-    resetGeneration();
-    start({
+    setView("all");
+    void queue.start({
       mode: "video",
       prompt,
       options: selections,
@@ -150,11 +156,9 @@ export function StudioScreen() {
   }
 
   function handleSubmit() {
-    // Block while generating OR while a draft preview is pending approval —
-    // submitting again would silently discard the draft and start a new paid job.
-    if (!composer.canSubmit || status === "generating" || status === "draft") return;
-    setView("studio");
-    start({ ...composer.buildRequest(), projectId: activeId ?? undefined });
+    if (!composer.canSubmit || atConcurrencyCap) return;
+    setView("all"); // land on the feed; the new ad shows as a live card
+    void queue.start({ ...composer.buildRequest(), projectId: activeId ?? undefined });
     // Count ungrouped generations (an event, not an effect) to time the nudge.
     if (activeId === null) {
       setGenCount((c) => {
@@ -181,9 +185,8 @@ export function StudioScreen() {
 
   /** "أعد الإنشاء" — re-run the exact same request for another take. */
   function handleRecreate(gen: Generation) {
-    setView("studio");
-    resetGeneration();
-    start({ ...requestForReuse(gen), projectId: activeId ?? undefined });
+    setView("all"); // the new take shows as a live card in the feed
+    void queue.start({ ...requestForReuse(gen), projectId: activeId ?? undefined });
   }
 
   /** "عدّل الوصف" — load the prompt + settings into the composer to tweak. */
@@ -309,7 +312,7 @@ export function StudioScreen() {
             <Composer
               composer={composer}
               onSubmit={handleSubmit}
-              isBusy={status === "generating" || status === "draft"}
+              isBusy={atConcurrencyCap}
               usage={usage}
             />
           </div>
@@ -318,7 +321,7 @@ export function StudioScreen() {
             <BrandNudge onCreate={openNewProject} onDismiss={dismissNudge} />
           )}
 
-          {error && (
+          {queue.error && (
             <div
               role="alert"
               className="flex w-full max-w-[640px] items-start gap-3 rounded-2xl border border-danger/20 bg-danger-soft px-4 py-3 text-start"
@@ -330,7 +333,7 @@ export function StudioScreen() {
               <div className="min-w-0">
                 <p className="text-sm font-bold text-danger">تعذّر إنشاء الإعلان</p>
                 <p className="mt-0.5 text-sm text-ink-muted">
-                  {friendlyError(error)}
+                  {friendlyError(queue.error)}
                 </p>
               </div>
             </div>
@@ -340,6 +343,8 @@ export function StudioScreen() {
             {view === "all" ? (
               <AllGenerationsView
                 refreshKey={galleryKey}
+                pending={queue.pending}
+                onCancel={queue.cancel}
                 onView={viewGeneration}
                 onRecreate={handleRecreate}
                 onReuse={handleReuse}
@@ -360,11 +365,9 @@ export function StudioScreen() {
             ) : (
               <ResultPanel
                 status={status}
-                mode={result?.request.mode ?? draft?.request.mode ?? composer.mode}
-                prompt={result?.request.prompt ?? draft?.request.prompt ?? composer.prompt}
+                mode={result?.request.mode ?? composer.mode}
+                prompt={result?.request.prompt ?? composer.prompt}
                 result={result}
-                draft={draft}
-                onApprove={approve}
                 onReset={handleReset}
                 projects={projects}
                 onSaveToProject={async (projectId) => {
@@ -403,7 +406,8 @@ export function StudioScreen() {
         onGenerate={(generationId) => {
           setAdRefModalOpen(false);
           setAdRefInitialUrl(undefined);
-          track(generationId);
+          setView("all");
+          queue.track(generationId, "video", "إعلان من مرجع");
         }}
       />
 

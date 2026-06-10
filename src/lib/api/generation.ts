@@ -63,6 +63,25 @@ export function getAllGenerations(): Promise<Generation[]> {
   return fetchJson<Generation[]>("/api/generations");
 }
 
+/** Create a generation job and return it immediately (status "queued"). */
+export function createGeneration(request: GenerationRequest): Promise<Generation> {
+  return fetchJson<Generation>("/api/generations", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(toPayload(request)),
+  });
+}
+
+/** Fetch a single generation's current state. */
+export function getGeneration(id: string): Promise<Generation> {
+  return fetchJson<Generation>(`/api/generations/${id}`);
+}
+
+/** Cancel an in-flight generation (won't bill). */
+export function cancelGeneration(id: string): Promise<void> {
+  return fetchJson<void>(`/api/generations/${id}/cancel`, { method: "POST" });
+}
+
 /** Delete a generation (owner-scoped on the backend). */
 export function deleteGeneration(id: string): Promise<void> {
   return fetchJson<void>(`/api/generations/${id}`, { method: "DELETE" });

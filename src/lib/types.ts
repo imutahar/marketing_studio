@@ -102,7 +102,7 @@ export interface GenerationOutput {
 /** A generation job as returned by the backend. */
 export interface Generation {
   id: string;
-  status: "queued" | "processing" | "succeeded" | "failed" | "draft_ready";
+  status: "queued" | "processing" | "succeeded" | "failed" | "draft_ready" | "cancelled";
   request: GenerationRequest;
   outputs: GenerationOutput[];
   capability?: string;
