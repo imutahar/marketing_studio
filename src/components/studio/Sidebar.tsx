@@ -155,7 +155,10 @@ function Section({ title, count, children }: { title: string; count?: number; ch
 interface SidebarProps {
   usage?: UsageSummary | null;
   onToolSelect?: (id: string) => void;
+  /** Open the full "all generations" feed. */
   onOpenAssets: () => void;
+  /** Whether the all-generations feed is the active view. */
+  isAllView?: boolean;
   projects: Project[];
   activeId: string | null;
   onSelectProject: (id: string) => void;
@@ -180,6 +183,7 @@ export function Sidebar({
   usage,
   onToolSelect,
   onOpenAssets,
+  isAllView,
   projects,
   activeId,
   onSelectProject,
@@ -238,17 +242,23 @@ export function Sidebar({
         </Section>
       </div>
 
-      {/* Assets — global media library */}
+      {/* All generations — the full feed of generated ads */}
       <button
         type="button"
         onClick={() => {
           onOpenAssets();
           onNavigate?.();
         }}
-        className="mt-2 flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-sm text-ink transition-colors hover:bg-neutrals"
+        aria-pressed={isAllView}
+        className={`mt-2 flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-sm transition-colors ${
+          isAllView ? "bg-secondary/40 font-medium text-ink" : "text-ink hover:bg-neutrals"
+        }`}
       >
-        <LayoutGrid className="size-4 shrink-0 text-ink-faint" strokeWidth={1.75} />
-        الأصول
+        <LayoutGrid
+          className={`size-4 shrink-0 ${isAllView ? "text-primary" : "text-ink-faint"}`}
+          strokeWidth={1.75}
+        />
+        كل الأعمال
       </button>
 
       {/* Projects */}

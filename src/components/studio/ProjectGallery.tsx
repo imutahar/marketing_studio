@@ -1,142 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import {
-  Play,
-  Heart,
-  MoreHorizontal,
-  RefreshCw,
-  Pencil,
-  Link2,
-  Download,
-  Copy,
-  Trash2,
-} from "lucide-react";
-import { useHoverVideo } from "@/hooks/useHoverVideo";
-import { usePopover } from "@/hooks/usePopover";
-import { useFavorites } from "@/hooks/useFavorites";
+import { useEffect, useState } from "react";
 import { getProjectGenerations } from "@/lib/api/projects";
-import { deleteGeneration } from "@/lib/api/generation";
-import { downloadUrl } from "@/lib/download";
-import { ConfirmDialog } from "../ui/ConfirmDialog";
+import { GenerationGrid } from "./GenerationGrid";
 import type { Generation } from "@/lib/types";
-
-interface CardActions {
-  onView: () => void;
-  onRecreate: () => void;
-  onReuse: () => void;
-  onUseAsReference: () => void;
-  onDownload: () => void;
-  onCopyLink: () => void;
-  onDelete: () => void;
-  isFavorite: boolean;
-  onToggleFavorite: () => void;
-}
-
-const overlayBtn =
-  "grid size-8 place-items-center rounded-lg bg-black/45 text-white backdrop-blur transition focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]";
-const menuItem =
-  "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-start text-xs text-ink transition-colors hover:bg-neutrals focus-visible:outline-none focus-visible:bg-neutrals";
-
-function WorkCard({ gen, actions }: { gen: Generation; actions: CardActions }) {
-  const { videoRef, hoverHandlers } = useHoverVideo();
-  const { open, setOpen, ref } = usePopover<HTMLDivElement>();
-  const out = gen.outputs[0];
-  // Guard against an empty-outputs generation (a succeeded job with no outputs).
-  if (!out) return null;
-  const isVideo = out.type === "video";
-
-  return (
-    <div className="group relative aspect-[3/4] overflow-hidden rounded-2xl bg-neutrals transition hover:-translate-y-1">
-      <button
-        type="button"
-        onClick={actions.onView}
-        {...(isVideo ? hoverHandlers : {})}
-        aria-label="عرض الإعلان"
-        className="block size-full focus-visible:outline-none"
-      >
-        {isVideo ? (
-          <>
-            <video
-              ref={videoRef}
-              src={out.url}
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              className="pointer-events-none absolute inset-0 size-full object-cover"
-            />
-            <span className="absolute inset-0 grid place-items-center bg-black/10">
-              <Play className="size-6 text-card/90" />
-            </span>
-          </>
-        ) : (
-          <Image src={out.url} alt="" fill className="object-cover" unoptimized />
-        )}
-      </button>
-
-      {/* Favorite — always visible when favorited, else on hover. */}
-      <button
-        type="button"
-        onClick={actions.onToggleFavorite}
-        aria-pressed={actions.isFavorite}
-        aria-label={actions.isFavorite ? "إزالة من المفضلة" : "أضف إلى المفضلة"}
-        className={`absolute top-2 start-2 ${overlayBtn} ${
-          actions.isFavorite ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-        }`}
-      >
-        <Heart
-          className={`size-4 ${actions.isFavorite ? "fill-red-500 text-red-500" : ""}`}
-          strokeWidth={1.75}
-        />
-      </button>
-
-      {/* ⋯ overflow menu. */}
-      <div ref={ref} className="absolute top-2 end-2">
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          aria-label="خيارات"
-          aria-expanded={open}
-          className={`${overlayBtn} opacity-0 group-hover:opacity-100 ${open ? "opacity-100" : ""}`}
-        >
-          <MoreHorizontal className="size-4" strokeWidth={1.75} />
-        </button>
-        {open && (
-          <div className="absolute end-0 top-full z-30 mt-1 w-44 rounded-xl border border-line bg-card p-1.5 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.12)]">
-            <button type="button" className={menuItem} onClick={() => { setOpen(false); actions.onRecreate(); }}>
-              <RefreshCw className="size-4 text-ink-muted" strokeWidth={1.75} /> أعد الإنشاء
-            </button>
-            <button type="button" className={menuItem} onClick={() => { setOpen(false); actions.onReuse(); }}>
-              <Pencil className="size-4 text-ink-muted" strokeWidth={1.75} /> عدّل الوصف
-            </button>
-            {isVideo && (
-              <button type="button" className={menuItem} onClick={() => { setOpen(false); actions.onUseAsReference(); }}>
-                <Link2 className="size-4 text-ink-muted" strokeWidth={1.75} /> استخدم كمرجع
-              </button>
-            )}
-            <div className="my-1 h-px bg-line" />
-            <button type="button" className={menuItem} onClick={() => { setOpen(false); actions.onDownload(); }}>
-              <Download className="size-4 text-ink-muted" strokeWidth={1.75} /> تنزيل
-            </button>
-            <button type="button" className={menuItem} onClick={() => { setOpen(false); actions.onCopyLink(); }}>
-              <Copy className="size-4 text-ink-muted" strokeWidth={1.75} /> نسخ الرابط
-            </button>
-            <div className="my-1 h-px bg-line" />
-            <button
-              type="button"
-              className={`${menuItem} text-danger hover:bg-danger-soft`}
-              onClick={() => { setOpen(false); actions.onDelete(); }}
-            >
-              <Trash2 className="size-4" strokeWidth={1.75} /> حذف
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 interface ProjectGalleryProps {
   projectId: string | null;
@@ -148,7 +15,7 @@ interface ProjectGalleryProps {
   onUseAsReference: (generation: Generation) => void;
 }
 
-/** Shows the active project's generated ads with per-card actions. */
+/** The active project's generated ads. Renders nothing when the project is empty. */
 export function ProjectGallery({
   projectId,
   refreshKey,
@@ -158,11 +25,6 @@ export function ProjectGallery({
   onUseAsReference,
 }: ProjectGalleryProps) {
   const [works, setWorks] = useState<Generation[]>([]);
-  const [favOnly, setFavOnly] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState<Generation | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { isFavorite, toggle: toggleFavorite } = useFavorites();
 
   useEffect(() => {
     if (!projectId) return;
@@ -179,115 +41,17 @@ export function ProjectGallery({
     };
   }, [projectId, refreshKey]);
 
-  // Clean up the toast timer on unmount.
-  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
-
-  function showToast(message: string) {
-    setToast(message);
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), 2200);
-  }
-
-  function handleDownload(gen: Generation) {
-    const out = gen.outputs[0];
-    if (!out) return;
-    const ext = out.type === "video" ? "mp4" : "jpg";
-    void downloadUrl(out.url, `senz-ad-${gen.id.slice(0, 8)}.${ext}`);
-  }
-
-  async function handleCopyLink(gen: Generation) {
-    const url = gen.outputs[0]?.url;
-    if (!url) return;
-    try {
-      await navigator.clipboard.writeText(url);
-      showToast("تم نسخ الرابط");
-    } catch {
-      showToast("تعذّر نسخ الرابط");
-    }
-  }
-
-  async function confirmDelete() {
-    const gen = pendingDelete;
-    setPendingDelete(null);
-    if (!gen) return;
-    try {
-      await deleteGeneration(gen.id);
-      setWorks((prev) => prev.filter((w) => w.id !== gen.id));
-      showToast("تم حذف الإعلان");
-    } catch {
-      showToast("تعذّر حذف الإعلان");
-    }
-  }
-
   if (!projectId || works.length === 0) return null;
 
-  const visible = favOnly ? works.filter((w) => isFavorite(w.id)) : works;
-
   return (
-    <div className="w-full">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-ink">أعمال المشروع</h3>
-        <button
-          type="button"
-          onClick={() => setFavOnly((v) => !v)}
-          aria-pressed={favOnly}
-          className={`flex h-8 items-center gap-1.5 rounded-xl border px-2.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1 ${
-            favOnly
-              ? "border-primary bg-secondary text-primary"
-              : "border-line text-ink-muted hover:border-line-hover hover:text-ink"
-          }`}
-        >
-          <Heart className={`size-3.5 ${favOnly ? "fill-current" : ""}`} strokeWidth={1.75} />
-          المفضلة
-        </button>
-      </div>
-
-      {visible.length === 0 ? (
-        <p className="py-6 text-center text-sm text-ink-muted">لا توجد إعلانات مفضّلة بعد.</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-5">
-          {visible.map((gen) => (
-            <WorkCard
-              key={gen.id}
-              gen={gen}
-              actions={{
-                onView: () => onView(gen),
-                onRecreate: () => onRecreate(gen),
-                onReuse: () => onReuse(gen),
-                onUseAsReference: () => onUseAsReference(gen),
-                onDownload: () => handleDownload(gen),
-                onCopyLink: () => void handleCopyLink(gen),
-                onDelete: () => setPendingDelete(gen),
-                isFavorite: isFavorite(gen.id),
-                onToggleFavorite: () => toggleFavorite(gen.id),
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Transient feedback (copy / delete). */}
-      {toast && (
-        <div
-          role="status"
-          className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center"
-        >
-          <span className="rounded-full bg-ink px-4 py-2 text-xs font-medium text-card shadow-lg">
-            {toast}
-          </span>
-        </div>
-      )}
-
-      <ConfirmDialog
-        open={pendingDelete !== null}
-        title="حذف الإعلان"
-        message="سيتم حذف هذا الإعلان نهائيًا. لا يمكن التراجع عن هذا الإجراء."
-        confirmLabel="حذف"
-        cancelLabel="إلغاء"
-        danger
-        onConfirm={() => void confirmDelete()}
-        onCancel={() => setPendingDelete(null)}
-      />
-    </div>
+    <GenerationGrid
+      title="أعمال المشروع"
+      generations={works}
+      onView={onView}
+      onRecreate={onRecreate}
+      onReuse={onReuse}
+      onUseAsReference={onUseAsReference}
+      onDeleted={(id) => setWorks((prev) => prev.filter((w) => w.id !== id))}
+    />
   );
 }

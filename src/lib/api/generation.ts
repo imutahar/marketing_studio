@@ -58,6 +58,11 @@ export function getGenerationCapabilities(): Promise<{
   return fetchJson("/api/generations/capabilities");
 }
 
+/** All of the caller's generations, newest-first (across projects). */
+export function getAllGenerations(): Promise<Generation[]> {
+  return fetchJson<Generation[]>("/api/generations");
+}
+
 /** Delete a generation (owner-scoped on the backend). */
 export function deleteGeneration(id: string): Promise<void> {
   return fetchJson<void>(`/api/generations/${id}`, { method: "DELETE" });

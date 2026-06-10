@@ -17,14 +17,13 @@ import { Hero } from "./Hero";
 import { Composer } from "./Composer";
 import { PresetGallery } from "./PresetGallery";
 import { ProjectGallery } from "./ProjectGallery";
+import { AllGenerationsView } from "./AllGenerationsView";
 import { ResultPanel } from "./ResultPanel";
 import { UrlToAdModal } from "./UrlToAdModal";
 import { AdReferenceModal } from "./AdReferenceModal";
 import { ProjectModal } from "./ProjectModal";
-import { AssetsModal } from "./AssetsModal";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
 import { BrandNudge } from "./BrandNudge";
-import type { Asset } from "@/lib/api/assets";
 import { getProject, type ProjectDetail, type ProjectInput } from "@/lib/api/projects";
 import { assignGenerationProject } from "@/lib/api/generation";
 
@@ -71,7 +70,8 @@ export function StudioScreen() {
   const [adRefInitialUrl, setAdRefInitialUrl] = useState<string | undefined>();
   const [projectModalOpen, setProjectModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<ProjectDetail | null>(null);
-  const [assetsOpen, setAssetsOpen] = useState(false);
+  // Main-canvas view: the studio (compose + result) or the full "all works" feed.
+  const [view, setView] = useState<"studio" | "all">("studio");
   const [galleryKey, setGalleryKey] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -100,15 +100,10 @@ export function StudioScreen() {
     return editingProject ? updateProject(editingProject.id, body) : createProject(body);
   }
 
-  function viewAsset(asset: Asset) {
-    setAssetsOpen(false);
-    show({
-      id: asset.id,
-      status: "succeeded",
-      request: { mode: asset.type, prompt: asset.prompt ?? "", options: {}, attachments: [] },
-      outputs: [{ type: asset.type, url: asset.url }],
-      createdAt: asset.createdAt,
-    });
+  /** Open a generation in the focused result view (from a gallery/feed card). */
+  function viewGeneration(gen: Generation) {
+    setView("studio");
+    show(gen);
   }
 
   // After a finished job: refresh usage + the active project's summary.
@@ -158,6 +153,7 @@ export function StudioScreen() {
     // Block while generating OR while a draft preview is pending approval —
     // submitting again would silently discard the draft and start a new paid job.
     if (!composer.canSubmit || status === "generating" || status === "draft") return;
+    setView("studio");
     start({ ...composer.buildRequest(), projectId: activeId ?? undefined });
     // Count ungrouped generations (an event, not an effect) to time the nudge.
     if (activeId === null) {
@@ -172,6 +168,7 @@ export function StudioScreen() {
   }
 
   function handlePickPreset(preset: Preset) {
+    setView("studio");
     resetGeneration();
     composer.applyPreset(preset);
   }
@@ -184,12 +181,14 @@ export function StudioScreen() {
 
   /** "أعد الإنشاء" — re-run the exact same request for another take. */
   function handleRecreate(gen: Generation) {
+    setView("studio");
     resetGeneration();
     start({ ...requestForReuse(gen), projectId: activeId ?? undefined });
   }
 
   /** "عدّل الوصف" — load the prompt + settings into the composer to tweak. */
   function handleReuse(gen: Generation) {
+    setView("studio");
     composer.applyGeneration(requestForReuse(gen));
     resetGeneration(); // back to the compose view so the user can edit
     composerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -208,10 +207,14 @@ export function StudioScreen() {
   const sidebarProps = {
     usage,
     onToolSelect: handleToolSelect,
-    onOpenAssets: () => setAssetsOpen(true),
+    onOpenAssets: () => setView("all"),
+    isAllView: view === "all",
     projects,
     activeId,
-    onSelectProject: setActive,
+    onSelectProject: (id: string) => {
+      setActive(id);
+      setView("studio");
+    },
     onNewProject: openNewProject,
     onEditProject: (id: string) => void openEditProject(id),
     onDeleteProject: (id: string) => setPendingDeleteId(id),
@@ -293,12 +296,14 @@ export function StudioScreen() {
         </div>
 
         <div className="mx-auto flex min-h-full max-w-[1210px] flex-col items-center gap-10 px-4 py-8 sm:px-8 sm:py-16">
-          <Hero
-            projects={projects}
-            activeId={activeId}
-            onSelectProject={setActive}
-            onCreateProject={(name) => void createProject({ name })}
-          />
+          {view !== "all" && (
+            <Hero
+              projects={projects}
+              activeId={activeId}
+              onSelectProject={setActive}
+              onCreateProject={(name) => void createProject({ name })}
+            />
+          )}
 
           <div ref={composerRef} className="w-full scroll-mt-4">
             <Composer
@@ -332,7 +337,15 @@ export function StudioScreen() {
           )}
 
           <div className="w-full pt-2">
-            {status === "idle" ? (
+            {view === "all" ? (
+              <AllGenerationsView
+                refreshKey={galleryKey}
+                onView={viewGeneration}
+                onRecreate={handleRecreate}
+                onReuse={handleReuse}
+                onUseAsReference={handleUseAsReference}
+              />
+            ) : status === "idle" ? (
               <div className="flex w-full flex-col gap-10">
                 <ProjectGallery
                   projectId={activeId}
@@ -399,12 +412,6 @@ export function StudioScreen() {
         onClose={() => setProjectModalOpen(false)}
         project={editingProject}
         onSubmit={submitProject}
-      />
-
-      <AssetsModal
-        open={assetsOpen}
-        onClose={() => setAssetsOpen(false)}
-        onView={viewAsset}
       />
 
       <ConfirmDialog
