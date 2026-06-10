@@ -50,8 +50,12 @@ export async function approveGeneration(
  * Provider capabilities for the composer (e.g. whether the active video model
  * supports the 480p draft preview — Seedance 2.0 doesn't).
  */
-export function getGenerationCapabilities(): Promise<{ draft: boolean; cameraFixed: boolean }> {
-  return fetchJson<{ draft: boolean; cameraFixed: boolean }>("/api/generations/capabilities");
+export function getGenerationCapabilities(): Promise<{
+  draft: boolean;
+  cameraFixed: boolean;
+  fastVideo: boolean;
+}> {
+  return fetchJson("/api/generations/capabilities");
 }
 
 /** File a finished generation into a project (or move it between projects). */
@@ -74,6 +78,7 @@ function toPayload(request: GenerationRequest) {
     cameraFixed: request.cameraFixed,
     generateAudio: request.generateAudio,
     draft: request.draft,
+    fast: request.fast,
     options: request.options,
     // previewUrl is a base64 data URI of the (downscaled) uploaded image, which
     // the provider can consume directly as the image-to-image/video reference.

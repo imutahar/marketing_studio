@@ -18,6 +18,8 @@ export interface AdvancedSettings {
   generateAudio: boolean;
   /** Video only: generate a cheap 480p draft preview first. Remembered preference. */
   draft: boolean;
+  /** Video only: use the faster, cheaper model variant (lower fidelity). Default off. */
+  fast: boolean;
 }
 
 const DEFAULT_SETTINGS: AdvancedSettings = {
@@ -25,6 +27,7 @@ const DEFAULT_SETTINGS: AdvancedSettings = {
   cameraFixed: false,
   generateAudio: false,
   draft: false,
+  fast: false,
 };
 
 /** localStorage key for the remembered "draft mode" preference. */
@@ -167,8 +170,8 @@ export function useComposer(initialMode: StudioMode = "video") {
     setPrompt("");
     setSelections(defaultSelections(mode));
     setAttachments({});
-    // Keep the remembered draft-mode preference across resets.
-    setSettings((prev) => ({ ...DEFAULT_SETTINGS, draft: prev.draft }));
+    // Keep the remembered draft + speed preferences across resets.
+    setSettings((prev) => ({ ...DEFAULT_SETTINGS, draft: prev.draft, fast: prev.fast }));
   }, [mode]);
 
   const buildRequest = useCallback((): GenerationRequest => {
@@ -181,6 +184,7 @@ export function useComposer(initialMode: StudioMode = "video") {
       cameraFixed: mode === "video" && settings.cameraFixed ? true : undefined,
       generateAudio: mode === "video" && settings.generateAudio ? true : undefined,
       draft: mode === "video" && settings.draft ? true : undefined,
+      fast: mode === "video" && settings.fast ? true : undefined,
     };
   }, [mode, prompt, selections, attachments, settings]);
 

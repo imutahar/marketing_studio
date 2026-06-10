@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import { ArrowUp, Eye, Plus, Images, Sparkles, Check, X, Loader2 } from "lucide-react";
+import { ArrowUp, Eye, Plus, Images, Sparkles, Check, X, Loader2, Zap } from "lucide-react";
 import { useEnhance } from "@/hooks/useEnhance";
 import { useProductMention } from "@/hooks/useProductMention";
 import { useGenerationCapabilities } from "@/hooks/useGenerationCapabilities";
@@ -92,7 +92,7 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
   const isVideo = mode === "video";
   // Draft (480p preview) is only available when the active video model supports
   // it (Seedance 2.0 doesn't) — gate the toggle AND the cost estimate on it.
-  const { draftSupported, cameraFixedSupported } = useGenerationCapabilities();
+  const { draftSupported, cameraFixedSupported, fastVideoSupported } = useGenerationCapabilities();
   const draftActive = draftSupported && settings.draft;
   const estimate = estimateCost({
     mode,
@@ -374,6 +374,30 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
                   strokeWidth={1.75}
                 />
                 <span>معاينة 480p</span>
+              </button>
+            )}
+
+            {/* Fast / High-quality — video only, when a fast model variant
+                exists. On = the faster, cheaper variant (slightly lower
+                fidelity) for quick iteration; off = highest quality. */}
+            {isVideo && fastVideoSupported && (
+              <button
+                type="button"
+                onClick={() => setSettings((prev) => ({ ...prev, fast: !prev.fast }))}
+                aria-pressed={settings.fast}
+                aria-label="وضع سريع — إنشاء أسرع وأرخص بجودة أقل قليلًا"
+                title="وضع سريع: إنشاء أسرع وأرخص بجودة أقل قليلًا"
+                className={`flex h-8 items-center gap-1 rounded-xl border px-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-1 ${
+                  settings.fast
+                    ? "border-primary bg-secondary text-primary"
+                    : "border-line text-ink-muted hover:border-line-hover hover:text-ink"
+                }`}
+              >
+                <Zap
+                  className={`size-4 ${settings.fast ? "text-primary" : "text-ink-faint"}`}
+                  strokeWidth={1.75}
+                />
+                <span>وضع سريع</span>
               </button>
             )}
           </div>

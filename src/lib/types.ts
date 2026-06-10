@@ -89,6 +89,8 @@ export interface GenerationRequest {
   generateAudio?: boolean;
   /** Video only: generate a cheap 480p draft preview before the full render. */
   draft?: boolean;
+  /** Video only: use the faster, cheaper model variant (lower fidelity). */
+  fast?: boolean;
 }
 
 /** A single generated asset returned by the backend. */
