@@ -11,16 +11,21 @@ import { getGenerationCapabilities } from "@/lib/api/generation";
  */
 export function useGenerationCapabilities() {
   const [draftSupported, setDraftSupported] = useState(false);
+  const [cameraFixedSupported, setCameraFixedSupported] = useState(false);
 
   useEffect(() => {
     let active = true;
     getGenerationCapabilities()
-      .then((c) => active && setDraftSupported(!!c.draft))
+      .then((c) => {
+        if (!active) return;
+        setDraftSupported(!!c.draft);
+        setCameraFixedSupported(!!c.cameraFixed);
+      })
       .catch(() => {});
     return () => {
       active = false;
     };
   }, []);
 
-  return { draftSupported };
+  return { draftSupported, cameraFixedSupported };
 }

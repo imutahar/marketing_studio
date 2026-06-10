@@ -92,7 +92,7 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
   const isVideo = mode === "video";
   // Draft (480p preview) is only available when the active video model supports
   // it (Seedance 2.0 doesn't) — gate the toggle AND the cost estimate on it.
-  const { draftSupported } = useGenerationCapabilities();
+  const { draftSupported, cameraFixedSupported } = useGenerationCapabilities();
   const draftActive = draftSupported && settings.draft;
   const estimate = estimateCost({
     mode,
@@ -288,7 +288,8 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
             <ToolbarSettings
               settings={settings}
               onChange={(patch) => setSettings((prev) => ({ ...prev, ...patch }))}
-              showCameraFixed={mode === "video"}
+              showCameraFixed={mode === "video" && cameraFixedSupported}
+              showAudio={mode === "video"}
             />
             {/* ✨ Rewrite the prompt with AI. Hidden unless the backend has the
                 enhancer configured. */}
