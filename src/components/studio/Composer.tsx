@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ArrowUp, Eye, Plus, Images, Sparkles, Check, X, Loader2 } from "lucide-react";
 import { useEnhance } from "@/hooks/useEnhance";
 import { useProductMention } from "@/hooks/useProductMention";
+import { useGenerationCapabilities } from "@/hooks/useGenerationCapabilities";
 import type { ComposerController } from "@/hooks/useComposer";
 import type { AttachmentSlot as Slot } from "@/lib/types";
 import type { UsageSummary } from "@/lib/api/usage";
@@ -89,10 +90,14 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
   // every render (cheap, pure) so the hint by the send button always matches the
   // current settings — and the backend deduction.
   const isVideo = mode === "video";
+  // Draft (480p preview) is only available when the active video model supports
+  // it (Seedance 2.0 doesn't) — gate the toggle AND the cost estimate on it.
+  const { draftSupported } = useGenerationCapabilities();
+  const draftActive = draftSupported && settings.draft;
   const estimate = estimateCost({
     mode,
     durationSeconds: isVideo ? parseDurationSeconds(selections.duration) : undefined,
-    draft: settings.draft,
+    draft: draftActive,
     imageCount: isVideo ? undefined : parseImageVariations(selections.variations),
   });
   // Block submit only when usage is known AND the full job exceeds the balance.
@@ -348,9 +353,10 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
               </button>
             )}
 
-            {/* Draft preview toggle — video only. Promoted out of the ⚙️ popover
-                since it changes both cost and flow. Active = engaged styling. */}
-            {isVideo && (
+            {/* Draft preview toggle — video only, and only when the active
+                model supports it (Seedance 2.0 doesn't). Promoted out of the ⚙️
+                popover since it changes both cost and flow. */}
+            {isVideo && draftSupported && (
               <button
                 type="button"
                 onClick={() => setSettings((prev) => ({ ...prev, draft: !prev.draft }))}
