@@ -35,6 +35,8 @@ interface AdReferenceModalProps {
   projectId?: string | null;
   /** Called with the generation id once a video is kicked off. */
   onGenerate: (generationId: string) => void;
+  /** Pre-load a reference video (from "استخدم كمرجع" on a result). */
+  initialReferenceUrl?: string;
 }
 
 const RES_SELECT: DropdownSelect = {
@@ -80,9 +82,18 @@ function MiniSlot({
   );
 }
 
-export function AdReferenceModal({ open, onClose, projectId, onGenerate }: AdReferenceModalProps) {
+export function AdReferenceModal({ open, onClose, projectId, onGenerate, initialReferenceUrl }: AdReferenceModalProps) {
   const [step, setStep] = useState<"intro" | "analyzing" | "review">("intro");
   const [referenceVideo, setReferenceVideo] = useState<string | null>(null);
+
+  // When opened from "استخدم كمرجع", pre-select the passed video so the user
+  // lands on the intro step with the reference ready. Adjusting state during the
+  // open transition (React-recommended) avoids a cascading effect re-render.
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
+    if (open && initialReferenceUrl) setReferenceVideo(initialReferenceUrl);
+  }
   const [productImage, setProductImage] = useState<string>();
   const [avatarImage, setAvatarImage] = useState<string>();
   const [avatarName, setAvatarName] = useState<string>();

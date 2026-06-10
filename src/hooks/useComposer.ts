@@ -137,6 +137,27 @@ export function useComposer(initialMode: StudioMode = "video") {
     });
   }, []);
 
+  /**
+   * Load a finished generation's full request back into the composer so the
+   * user can tweak it and regenerate ("عدّل الوصف"). Reproduces the exact
+   * mode, prompt, toolbar options, attachments, and advanced settings.
+   */
+  const applyGeneration = useCallback((request: GenerationRequest) => {
+    setMode(request.mode);
+    setSelections({ ...defaultSelections(request.mode), ...request.options });
+    const next: Record<string, AttachmentValue> = {};
+    for (const a of request.attachments) next[a.slotId] = a;
+    setAttachments(next);
+    setPrompt(request.prompt);
+    setSettings({
+      negativePrompt: request.negativePrompt ?? "",
+      cameraFixed: request.cameraFixed ?? false,
+      generateAudio: request.generateAudio ?? false,
+      draft: request.draft ?? false,
+      fast: request.fast ?? false,
+    });
+  }, []);
+
   const applyPreset = useCallback((preset: Preset) => {
     setMode(preset.mode);
     setPrompt(preset.promptScaffold);
@@ -207,6 +228,7 @@ export function useComposer(initialMode: StudioMode = "video") {
     setAttachment,
     addReferenceImage,
     setSettings,
+    applyGeneration,
     applyPreset,
     applyProduct,
     reset,
