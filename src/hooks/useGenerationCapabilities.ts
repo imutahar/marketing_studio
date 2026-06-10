@@ -12,6 +12,7 @@ import { getGenerationCapabilities } from "@/lib/api/generation";
 export function useGenerationCapabilities() {
   const [draftSupported, setDraftSupported] = useState(false);
   const [cameraFixedSupported, setCameraFixedSupported] = useState(false);
+  const [fastVideoSupported, setFastVideoSupported] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -20,6 +21,7 @@ export function useGenerationCapabilities() {
         if (!active) return;
         setDraftSupported(!!c.draft);
         setCameraFixedSupported(!!c.cameraFixed);
+        setFastVideoSupported(!!c.fastVideo);
       })
       .catch(() => {});
     return () => {
@@ -27,5 +29,5 @@ export function useGenerationCapabilities() {
     };
   }, []);
 
-  return { draftSupported, cameraFixedSupported };
+  return { draftSupported, cameraFixedSupported, fastVideoSupported };
 }
