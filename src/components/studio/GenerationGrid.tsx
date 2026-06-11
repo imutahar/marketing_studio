@@ -62,7 +62,7 @@ interface CardActions {
 }
 
 const overlayBtn =
-  "grid size-8 place-items-center rounded-lg bg-black/45 text-white backdrop-blur transition focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]";
+  "grid size-9 place-items-center rounded-lg bg-black/45 text-white backdrop-blur transition focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]";
 const menuItem =
   "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-start text-xs text-ink transition-colors hover:bg-neutrals focus-visible:outline-none focus-visible:bg-neutrals";
 
@@ -109,7 +109,9 @@ function WorkCard({ gen, actions }: { gen: Generation; actions: CardActions }) {
         aria-pressed={actions.isFavorite}
         aria-label={actions.isFavorite ? "إزالة من المفضلة" : "أضف إلى المفضلة"}
         className={`absolute top-2 start-2 ${overlayBtn} ${
-          actions.isFavorite ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          actions.isFavorite
+            ? "opacity-100"
+            : "opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
         }`}
       >
         <Heart
@@ -125,12 +127,12 @@ function WorkCard({ gen, actions }: { gen: Generation; actions: CardActions }) {
           onClick={() => setOpen((o) => !o)}
           aria-label="خيارات"
           aria-expanded={open}
-          className={`${overlayBtn} opacity-0 group-hover:opacity-100 ${open ? "opacity-100" : ""}`}
+          className={`${overlayBtn} opacity-100 lg:opacity-0 lg:group-hover:opacity-100 ${open ? "lg:opacity-100" : ""}`}
         >
           <MoreHorizontal className="size-4" strokeWidth={1.75} />
         </button>
         {open && (
-          <div className="absolute end-0 top-full z-30 mt-1 w-44 rounded-xl border border-line bg-card p-1.5 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.12)]">
+          <div className="absolute end-0 top-full z-30 mt-1 w-44 max-w-[calc(100vw-1.5rem)] rounded-xl border border-line bg-card p-1.5 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.12)]">
             <button type="button" className={menuItem} onClick={() => { setOpen(false); actions.onRecreate(); }}>
               <RefreshCw className="size-4 text-ink-muted" strokeWidth={1.75} /> أعد الإنشاء
             </button>

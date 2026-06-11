@@ -165,7 +165,7 @@ export function Composer({ composer, onSubmit, isBusy, usage }: ComposerProps) {
                     <li key={p.id} role="option" aria-selected={active}>
                       <button
                         type="button"
-                        onMouseDown={(e) => {
+                        onPointerDown={(e) => {
                           e.preventDefault();
                           productMention.choose(p);
                         }}
