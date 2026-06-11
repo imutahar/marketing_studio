@@ -84,19 +84,8 @@ export function StudioScreen() {
   const drawerRef = useRef<HTMLDivElement>(null);
   useFocusTrap(drawerRef, menuOpen, () => setMenuOpen(false));
 
-  // The composer floats over the bottom of the canvas; measure its height so the
-  // scrollable content is padded enough to never sit hidden behind it.
-  const composerBarRef = useRef<HTMLDivElement>(null);
-  const [composerH, setComposerH] = useState(0);
-  useEffect(() => {
-    const el = composerBarRef.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver((entries) => {
-      setComposerH(entries[0].contentRect.height);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+  // Scroll target so "عدّل الوصف" brings the (now-populated) composer into view.
+  const composerRef = useRef<HTMLDivElement>(null);
 
   function openNewProject() {
     setEditingProject(null);
@@ -204,7 +193,8 @@ export function StudioScreen() {
   function handleReuse(gen: Generation) {
     setView("studio");
     composer.applyGeneration(requestForReuse(gen));
-    resetGeneration(); // back to the compose view (the composer floats, always visible)
+    resetGeneration();
+    composerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   /** "استخدم كمرجع" — open the ad-reference flow pre-loaded with this video. */
@@ -288,10 +278,10 @@ export function StudioScreen() {
         </div>
       </div>
 
-      {/* Main canvas: a column with a scrollable area + a floating composer bar. */}
-      <main className="studio-backdrop relative flex flex-1 flex-col overflow-hidden">
+      {/* Main canvas */}
+      <main className="studio-backdrop relative flex-1 overflow-y-auto scroll-thin">
         {/* Mobile top bar (below lg): hamburger on the start/right edge + credits pill. */}
-        <div className="z-30 flex shrink-0 items-center justify-between border-b border-line bg-card/95 px-4 py-2 backdrop-blur lg:hidden">
+        <div className="sticky top-0 z-30 flex items-center justify-between border-b border-line bg-card/95 px-4 py-2 backdrop-blur lg:hidden">
           <button
             type="button"
             aria-label="فتح القائمة"
@@ -308,44 +298,49 @@ export function StudioScreen() {
           )}
         </div>
 
-        {/* Scrollable content. Padded at the bottom by the floating composer's height. */}
-        <div className="relative flex-1 overflow-y-auto scroll-thin">
-          <div
-            className="mx-auto flex min-h-full max-w-[1210px] flex-col items-center gap-10 px-4 pt-8 sm:px-8 sm:pt-16"
-            style={{ paddingBottom: composerH + 24 }}
-          >
-            {view !== "all" && (
-              <Hero
-                projects={projects}
-                activeId={activeId}
-                onSelectProject={setActive}
-                onCreateProject={(name) => void createProject({ name })}
+        <div className="mx-auto flex min-h-full max-w-[1210px] flex-col items-center gap-10 px-4 py-8 sm:px-8 sm:py-16">
+          {view !== "all" && (
+            <Hero
+              projects={projects}
+              activeId={activeId}
+              onSelectProject={setActive}
+              onCreateProject={(name) => void createProject({ name })}
+            />
+          )}
+
+          {/* Composer — inline + centralized (the primary focus). */}
+          <div ref={composerRef} className="w-full scroll-mt-4">
+            <Composer
+              composer={composer}
+              onSubmit={handleSubmit}
+              isBusy={atConcurrencyCap}
+              usage={usage}
+            />
+          </div>
+
+          {showNudge && (
+            <BrandNudge onCreate={openNewProject} onDismiss={dismissNudge} />
+          )}
+
+          {queue.error && (
+            <div
+              role="alert"
+              className="flex w-full max-w-[640px] items-start gap-3 rounded-2xl border border-danger/20 bg-danger-soft px-4 py-3 text-start"
+            >
+              <TriangleAlert
+                className="mt-0.5 size-5 shrink-0 text-danger"
+                strokeWidth={1.75}
               />
-            )}
-
-            {showNudge && (
-              <BrandNudge onCreate={openNewProject} onDismiss={dismissNudge} />
-            )}
-
-            {queue.error && (
-              <div
-                role="alert"
-                className="flex w-full max-w-[640px] items-start gap-3 rounded-2xl border border-danger/20 bg-danger-soft px-4 py-3 text-start"
-              >
-                <TriangleAlert
-                  className="mt-0.5 size-5 shrink-0 text-danger"
-                  strokeWidth={1.75}
-                />
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-danger">تعذّر إنشاء الإعلان</p>
-                  <p className="mt-0.5 text-sm text-ink-muted">
-                    {friendlyError(queue.error)}
-                  </p>
-                </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-danger">تعذّر إنشاء الإعلان</p>
+                <p className="mt-0.5 text-sm text-ink-muted">
+                  {friendlyError(queue.error)}
+                </p>
               </div>
-            )}
+            </div>
+          )}
 
-            <div className="w-full pt-2">
+          <div className="w-full pt-2">
             {view === "all" ? (
               <AllGenerationsView
                 refreshKey={galleryKey}
@@ -391,22 +386,6 @@ export function StudioScreen() {
                 onUseAsReference={result ? () => handleUseAsReference(result) : undefined}
               />
             )}
-            </div>
-          </div>
-        </div>
-
-        {/* Floating composer — always available at the bottom of the canvas. */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30">
-          <div className="pointer-events-none h-16 bg-gradient-to-t from-card to-transparent" aria-hidden />
-          <div ref={composerBarRef} className="pointer-events-auto px-4 pb-4 sm:px-8 sm:pb-6">
-            <div className="mx-auto max-w-[1210px]">
-              <Composer
-                composer={composer}
-                onSubmit={handleSubmit}
-                isBusy={atConcurrencyCap}
-                usage={usage}
-              />
-            </div>
           </div>
         </div>
       </main>
