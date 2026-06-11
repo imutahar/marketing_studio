@@ -35,7 +35,7 @@ export function ToolbarSlider({ config, value, onChange }: ToolbarSliderProps) {
       </button>
 
       {open && (
-        <div className="absolute bottom-full z-30 mb-1 w-[208px] rounded-xl border border-line bg-card p-3 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.1)]">
+        <div className="absolute bottom-full z-30 mb-1 w-[208px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-line bg-card p-3 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.1)]">
           <div className="mb-2 flex items-center justify-between text-xs text-ink-faint">
             <span>{config.min} {config.unit}</span>
             <span className="font-bold text-primary">{current} {config.unit}</span>

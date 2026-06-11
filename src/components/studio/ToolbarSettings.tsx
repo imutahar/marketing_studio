@@ -54,7 +54,7 @@ export function ToolbarSettings({ settings, onChange, showCameraFixed, showAudio
       </button>
 
       {open && (
-        <div className="absolute bottom-full z-30 mb-1 w-[280px] rounded-xl border border-line bg-card p-3 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.1)]">
+        <div className="absolute bottom-full z-30 mb-1 w-[280px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-line bg-card p-3 shadow-[0px_6px_14px_0px_rgba(0,0,0,0.1)]">
           <p className="mb-2 text-xs font-bold text-ink">إعدادات متقدمة</p>
 
           {/* "Things to avoid" — one-tap chips instead of a negative-prompt box. */}
